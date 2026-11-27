@@ -97,7 +97,7 @@ select.pill{appearance:none;-webkit-appearance:none;cursor:pointer;text-align:ce
 .gh.now{box-shadow:inset 0 -4px 0 #fff}
 .gh small{display:block;font-weight:normal;opacity:.8}
 .lc{position:sticky;left:0;background:#fff;z-index:4;border-bottom:1px solid var(--line);border-right:1px solid var(--line);display:grid;grid-template-columns:22px 110px 1fr 112px;align-items:center;gap:6px;padding:0 10px;height:34px;font-size:13px}
-.lc.art{background:#F4F6F8;font-weight:bold;height:38px;cursor:pointer;grid-template-columns:20px 16px 104px 1fr 26px 112px}
+.lc.art{background:#F4F6F8;font-weight:bold;height:38px;cursor:pointer;grid-template-columns:20px 16px 104px 1fr 24px 26px 112px}
 .addst{width:24px;height:24px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--navy);font-weight:bold;cursor:pointer;line-height:1;padding:0;opacity:.0}
 .lc.art:hover .addst,.addst:focus-visible{opacity:1}
 @media (hover:none){.addst{opacity:1}}
@@ -191,7 +191,7 @@ body.ghm .fileonly,body.ghm [data-act=connect],body.ghm #bSave{display:none!impo
  .kpis{grid-template-columns:repeat(4,1fr)}
  .kpis .kpi.prog{grid-column:1/-1}
  .lc{grid-template-columns:20px 1fr 104px}
- .lc.art{grid-template-columns:20px 16px 1fr 26px 104px}
+ .lc.art{grid-template-columns:20px 16px 1fr 24px 26px 104px}
  .lc .id.cid{display:none}
 }
 @media (max-width:760px){
@@ -228,7 +228,7 @@ body.ghm .fileonly,body.ghm [data-act=connect],body.ghm #bSave{display:none!impo
  select.pill{min-height:36px;padding:8px 10px}
  .plan{max-height:calc(100vh - 250px)}
  .lc{grid-template-columns:22px 1fr 96px;padding:0 6px;font-size:12px;height:44px}
- .lc.art{grid-template-columns:22px 14px 1fr 26px 96px}
+ .lc.art{grid-template-columns:22px 14px 1fr 24px 26px 96px}
  .rh{width:22px;height:34px}
  .lc.art{height:44px}
  .tl,.tl.art{height:44px}
@@ -342,6 +342,15 @@ body.rdragging,body.rdragging *{cursor:grabbing!important}
 .drq button{border:1px solid var(--line);background:#fff;border-radius:14px;padding:5px 10px;font-size:12px;cursor:pointer;color:var(--ink)}
 @media (hover:hover){.drq button:hover{border-color:var(--navy)}}
 @media (max-width:760px){.drw{display:none;flex:1 1 100%}.bar.fopen .drw{display:block}.drb{width:100%;min-height:44px}.drp{width:calc(100vw - 28px)}}
+/* ---------- rename ---------- */
+.renart{width:22px;height:24px;border-radius:6px;border:0;background:none;color:var(--mut);cursor:pointer;padding:0;opacity:0;font-size:13px}
+.lc.art:hover .renart,.renart:focus-visible{opacity:1}
+@media (hover:hover){.renart:hover{background:#fff;color:var(--navy)}}
+@media (hover:none){.renart{opacity:1}}
+.dhr{display:flex;align-items:center;gap:6px}
+.dh .ren{border:0;background:rgba(255,255,255,.1);color:#fff;border-radius:6px;width:26px;height:24px;cursor:pointer;font-size:13px;opacity:.75;flex:0 0 auto}
+@media (hover:hover){.dh .ren:hover{opacity:1;background:rgba(255,255,255,.2)}}
+.dh h2{cursor:text}
 /* ---------- toaster (Sonner-style stack) ---------- */
 #toaster{position:fixed;right:24px;bottom:24px;width:360px;max-width:calc(100vw - 32px);z-index:90;pointer-events:none}
 .tst{position:absolute;right:0;bottom:0;width:100%;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 20px rgba(20,28,36,.12);padding:13px 14px;display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4;pointer-events:auto;touch-action:none;user-select:none;
@@ -357,7 +366,8 @@ body.rdragging,body.rdragging *{cursor:grabbing!important}
 .tst:hover .x,.tst:focus-within .x{opacity:1}
 .tst.success .ic{color:#2E7D32}.tst.error .ic{color:var(--red)}.tst.info .ic{color:var(--prog)}.tst.loading .ic{color:var(--mut)}
 .tst.error{border-color:#F3C4BF}
-@media (max-width:760px){#toaster{right:16px;left:16px;width:auto;bottom:16px}.tst .x{opacity:1}.tst .ac{min-height:36px;padding:8px 12px}}
+body:has(.drawer.on) #toaster{right:464px;transition:right 300ms var(--ease-drawer)}
+@media (max-width:760px){body:has(.drawer.on) #toaster{right:16px;bottom:84px}#toaster{right:16px;left:16px;width:auto;bottom:16px}.tst .x{opacity:1}.tst .ac{min-height:36px;padding:8px 12px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.spinner{animation-duration:1.4s!important;animation-iteration-count:infinite!important}}
 </style>
 </head>
@@ -434,7 +444,7 @@ body.rdragging,body.rdragging *{cursor:grabbing!important}
 
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="xStep">
-  <div class="dh"><div class="id" id="xId"></div><h2 id="xStep"></h2><div class="sub" id="xArt"></div></div>
+  <div class="dh"><div class="id" id="xId"></div><div class="dhr"><h2 id="xStep"></h2><button class="ren" id="xRenStep" type="button" title="Rename this step" aria-label="Rename step">✎</button></div><div class="dhr"><div class="sub" id="xArt"></div><button class="ren" id="xRenArt" type="button" title="Rename this deliverable" aria-label="Rename deliverable">✎</button></div></div>
   <div class="db">
     <div class="fld"><span class="lab">Status</span><div class="seg" id="xSeg"></div></div>
     <div class="fld" id="xCkWrap"><span class="lab">Checklist <span id="xCkCount" class="ckc"></span></span>
@@ -468,6 +478,13 @@ body.rdragging,body.rdragging *{cursor:grabbing!important}
   <button role="menuitem" data-a="step"><span class="mi">＋</span><span><b>Add step</b><small id="amStep">To any deliverable</small></span></button>
   <button role="menuitem" data-a="art"><span class="mi">▦</span><span><b>Add deliverable</b><small id="amArt">New deliverable with standard steps</small></span></button>
 </div>
+<div class="modal" id="renModal"><div class="box" style="max-width:440px">
+  <h2 id="rnTitle">Rename</h2>
+  <div class="fld"><label for="rnIn" id="rnLab">Name</label><input type="text" id="rnIn" maxlength="80"></div>
+  <div class="hint" id="rnHint"></div>
+  <div class="hint" id="rnErr" style="color:#DA291C;font-weight:bold;min-height:18px"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"><button class="btn" id="rnCancel">Cancel</button><button class="btn pri" id="rnOk">Save</button></div>
+</div></div>
 <div class="modal" id="artModal"><div class="box" style="max-width:520px">
   <h2>Add a deliverable</h2>
   <div class="row2"><div class="fld"><label for="dSec">Section</label><select id="dSec"></select></div>
@@ -550,10 +567,10 @@ const esc = s => S(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;
 const STATUSES = ['Not started','In progress','Blocked','Done'];
 const cls = s => 's-' + (s||'Not started').split(' ')[0];
 const bcls = s => 'b-' + (s||'Not started').split(' ')[0];
-const EDIT = ['owner','status','target','actual','blocker','blockerSince','start','deleted','notes','notesBy','so'];
+const EDIT = ['owner','status','target','actual','blocker','blockerSince','start','deleted','notes','notesBy','so','step','artifact'];
 // Conflict-safe merge: each field group carries its own timestamp, so two people editing
 // different fields of one task never overwrite each other. Same field: the later edit wins.
-const GROUPS = {status: ['status','actual'], target: ['target'], start: ['start'], blocker: ['blocker','blockerSince'], owner: ['owner'], deleted: ['deleted'], notes: ['notes','notesBy'], so: ['so']};
+const GROUPS = {status: ['status','actual'], target: ['target'], start: ['start'], blocker: ['blocker','blockerSince'], owner: ['owner'], deleted: ['deleted'], notes: ['notes','notesBy'], so: ['so'], name: ['step'], art: ['artifact']};
 const vals = t => Object.fromEntries(EDIT.map(k => [k, t[k] == null ? '' : t[k]]));
 function stamp(t, bv, addDirty){
   const now = Date.now(); t.fu = t.fu || {}; let ch = false;
@@ -833,7 +850,7 @@ function renderPlan(){
     const s0 = every.map(t => t.start).sort()[0], e0 = every.map(barEnd).sort().slice(-1)[0];
     const late = every.some(t => t.status !== 'Done' && tgt(t) < viewDay);
     const col = collapsed.has(a.id);
-    h += `<div class="lc art${col?' collapsed':''}" data-tog="${esc(a.id)}" data-art="${esc(a.id)}" data-sec="${esc(a.section)}"><button class="rh" data-mv="art" data-id="${esc(a.id)}" title="Drag up or down to reorder this deliverable (or focus and press ↑ ↓)" aria-label="Reorder ${esc(a.id)}">⠿</button><span class="caret">▾</span><span class="id cid">${esc(a.id)}</span><span class="nm" title="${esc(a.id + ' · ' + a.name)}">${esc(a.name)}</span><button class="addst" data-add="${esc(a.id)}" aria-haspopup="menu" title="Add a step or a deliverable" aria-label="Add near ${esc(a.id)}">+</button><span class="pill ${cls(roll)}">${roll === 'In progress' ? dn + '/' + n + ' done' : roll}</span></div>`;
+    h += `<div class="lc art${col?' collapsed':''}" data-tog="${esc(a.id)}" data-art="${esc(a.id)}" data-sec="${esc(a.section)}"><button class="rh" data-mv="art" data-id="${esc(a.id)}" title="Drag up or down to reorder this deliverable (or focus and press ↑ ↓)" aria-label="Reorder ${esc(a.id)}">⠿</button><span class="caret">▾</span><span class="id cid">${esc(a.id)}</span><span class="nm" title="${esc(a.id + ' · ' + a.name)}">${esc(a.name)}</span><button class="renart" data-ren="${esc(a.id)}" title="Rename this deliverable" aria-label="Rename ${esc(a.id)}">✎</button><button class="addst" data-add="${esc(a.id)}" aria-haspopup="menu" title="Add a step or a deliverable" aria-label="Add near ${esc(a.id)}">+</button><span class="pill ${cls(roll)}">${roll === 'In progress' ? dn + '/' + n + ' done' : roll}</span></div>`;
     h += `<div class="tl art">${back}${bar(s0, e0, bcls(roll), late ? 'over' : '', null, '', roll === 'Done' ? null : ['art', a.id])}</div>`;
     if(col) return;
     a.steps.forEach(t => {
@@ -851,7 +868,7 @@ function renderPlan(){
   pl.innerHTML = h; pl.scrollTop = stp;
   if(scrolledDay !== viewDay){ scrolledDay = viewDay; pl.scrollTo({left: Math.max(0, idx(viewDay) * CW - 3 * CW), behavior: sl ? 'smooth' : 'auto'}); } else pl.scrollLeft = sl;
 }
-$('#plan').addEventListener('click', e => { if(e.target.closest('.rh') || rdSuppress) return; const ad = e.target.closest('[data-add]'); if(ad){ e.stopPropagation(); openAddMenu(ad, ad.dataset.add); return; } const tg = e.target.closest('[data-tog]'); if(tg){ const id = tg.dataset.tog; collapsed.has(id) ? collapsed.delete(id) : collapsed.add(id); store.set(LS + '-col', JSON.stringify([...collapsed])); renderPlan(); } });
+$('#plan').addEventListener('click', e => { if(e.target.closest('.rh') || rdSuppress) return; const rn = e.target.closest('[data-ren]'); if(rn){ e.stopPropagation(); openRename('art', rn.dataset.ren); return; } const ad = e.target.closest('[data-add]'); if(ad){ e.stopPropagation(); openAddMenu(ad, ad.dataset.add); return; } const tg = e.target.closest('[data-tog]'); if(tg){ const id = tg.dataset.tog; collapsed.has(id) ? collapsed.delete(id) : collapsed.add(id); store.set(LS + '-col', JSON.stringify([...collapsed])); renderPlan(); } });
 try { collapsed = new Set(JSON.parse(store.get(LS + '-col') || '[]')); } catch(e){}
 $('#bExpand').onclick = () => { collapsed.clear(); store.set(LS + '-col', '[]'); renderPlan(); };
 $('#bCollapse').onclick = () => { T().forEach(t => collapsed.add(t.artId)); store.set(LS + '-col', JSON.stringify([...collapsed])); renderPlan(); };
@@ -1155,6 +1172,36 @@ $('#dOk').onclick = () => needName(() => {
   undo = () => { made.forEach(t => { const bv = vals(t); t.deleted = true; logChange(t, 'Undo: deliverable removed'); stamp(t, bv); }); persist(); render(); toast(`Removed ${id}`, false, 'info'); };
   toast(`Added ${id} · ${name} with ${made.length} step${made.length > 1 ? 's' : ''}`, true, 'success');
 });
+// ---------- rename a deliverable or a step (IDs never change) ----------
+let rnCtx = null;
+function openRename(kind, id){
+  const isArt = kind === 'art', t = isArt ? T().find(x => x.artId === id) : T().find(x => x.id === id); if(!t) return;
+  rnCtx = {kind, id};
+  $('#rnTitle').textContent = isArt ? 'Rename deliverable' : 'Rename step';
+  $('#rnLab').textContent = isArt ? `Name of ${id}` : `Name of step ${id}`;
+  $('#rnIn').value = isArt ? t.artifact : t.step; $('#rnErr').textContent = '';
+  const n = T().filter(x => x.artId === t.artId).length;
+  $('#rnHint').textContent = isArt ? `The ID ${id} stays the same. All ${n} steps show the new name.` : `The ID ${id} stays the same. Belongs to ${t.artId} · ${t.artifact}.`;
+  $('#renModal').classList.add('on'); setTimeout(() => { $('#rnIn').focus(); $('#rnIn').select(); }, 40);
+}
+$('#rnCancel').onclick = () => $('#renModal').classList.remove('on');
+$('#renModal').addEventListener('click', e => { if(e.target.id === 'renModal') $('#renModal').classList.remove('on'); });
+$('#rnIn').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); $('#rnOk').click(); } });
+$('#rnOk').onclick = () => needName(() => {
+  const c = rnCtx; if(!c) return; const v = $('#rnIn').value.trim().replace(/\s+/g, ' ');
+  if(!v) return ($('#rnErr').textContent = 'The name cannot be empty.', $('#rnIn').focus());
+  const list = c.kind === 'art' ? T().filter(x => x.artId === c.id) : [T().find(x => x.id === c.id)], key = c.kind === 'art' ? 'artifact' : 'step';
+  const old = list[0][key]; $('#renModal').classList.remove('on'); if(v === old) return;
+  const apply = (val, why) => list.forEach(t => { const bv = vals(t); t[key] = val; logChange(t, why); stamp(t, bv); });
+  apply(v, `Renamed ${c.kind === 'art' ? 'deliverable' : 'step'}: "${old}" → "${v}"`); persist(); fillOwners(); render(); refreshDrawerHead();
+  undo = () => { apply(old, `Undo rename: "${v}" → "${old}"`); persist(); render(); refreshDrawerHead(); toast('Name restored', false, 'info'); };
+  toast(`Renamed ${c.kind === 'art' ? c.id : 'step'} to "${v}"`, true, 'success');
+  if(c.kind === 'art') flashRow(`.lc.art[data-art="${CSS.escape(c.id)}"]`);
+});
+function refreshDrawerHead(){ const t = openId && T().find(x => x.id === openId); if(!t) return; $('#xStep').textContent = t.step; $('#xArt').textContent = t.artId + ' · ' + t.artifact; }
+$('#xRenStep').onclick = () => openId && openRename('step', openId);
+$('#xRenArt').onclick = () => { const t = openId && T().find(x => x.id === openId); t && openRename('art', t.artId); };
+$('#xStep').addEventListener('dblclick', () => openId && openRename('step', openId));
 const formState = () => JSON.stringify([draft && draft.status, cleanHTML($('#xNotes').innerHTML), $('#xStartIn').value, $('#xTarget').value, $('#xActual').value, $('#xBlocker').value.trim(), $('#xOwner').value.trim()]);
 function hintT(){
   const t = T().find(x => x.id === openId); if(!t) return;
@@ -1178,7 +1225,7 @@ function closeDrawer(force){
 }
 $('#xClose').onclick = () => closeDrawer(); $('#scrim').onclick = () => closeDrawer();
 document.addEventListener('keydown', e => {
-  if(e.key === 'Escape'){ if($('#nameModal').classList.contains('on')){ if(!$('#nameCancel').classList.contains('hidden')) $('#nameCancel').click(); return; } if($('#help').classList.contains('on')){ $('#help').classList.remove('on'); return; } if($('#addModal').classList.contains('on')){ $('#addModal').classList.remove('on'); return; } if($('#artModal').classList.contains('on')){ $('#artModal').classList.remove('on'); return; } $('#menu').classList.remove('on'); closeDrawer(); }
+  if(e.key === 'Escape'){ if($('#nameModal').classList.contains('on')){ if(!$('#nameCancel').classList.contains('hidden')) $('#nameCancel').click(); return; } if($('#help').classList.contains('on')){ $('#help').classList.remove('on'); return; } if($('#addModal').classList.contains('on')){ $('#addModal').classList.remove('on'); return; } if($('#artModal').classList.contains('on')){ $('#artModal').classList.remove('on'); return; } if($('#renModal').classList.contains('on')){ $('#renModal').classList.remove('on'); return; } $('#menu').classList.remove('on'); closeDrawer(); }
   if(e.key === 'Tab' && openId){ const f = [...$('#drawer').querySelectorAll('button,input,textarea,select')].filter(x => x.offsetParent !== null);
     if(!f.length) return; const first = f[0], last = f[f.length - 1];
     if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); } else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
