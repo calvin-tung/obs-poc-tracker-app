@@ -1204,6 +1204,13 @@ body.ghm-admin .menu [data-gh=admin]{display:block}
       <div class="msg" id="admTeamMsg"></div>
     </div>
     <div class="card">
+      <h3>Agent password <span class="kv" id="admAgentState" style="font-weight:normal"></span></h3>
+      <div class="kv">For scripts and AI agents that update the tracker data, such as migrations. It cannot open the tracker page. Sign-in log entries show these runs as "Agent".</div>
+      <div class="row" style="margin-top:10px"><input type="password" id="admG1" placeholder="New agent password (16+ characters)" autocomplete="new-password"><input type="password" id="admG2" placeholder="Type it again" autocomplete="new-password"></div>
+      <div class="acts"><button class="btn pri" id="admAgentGo">Set agent password</button><button class="btn" id="admAgentOff">Remove agent access</button></div>
+      <div class="msg" id="admAgentMsg"></div>
+    </div>
+    <div class="card">
       <h3>Admin password</h3>
       <div class="row"><input type="password" id="admA1" placeholder="New admin password (12+ characters)" autocomplete="new-password"><input type="password" id="admA2" placeholder="Type it again" autocomplete="new-password"></div>
       <div class="kv" style="margin-top:8px">Only the admin sign-in changes. The team keeps working.</div>
@@ -1477,7 +1484,7 @@ function msg(id, t, ok){ const el = $g(id); el.textContent = t; el.className = '
 $g('#admTabs').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return;
   document.querySelectorAll('#admTabs button').forEach(x => x.classList.toggle('on', x === b));
   document.querySelectorAll('#adm section').forEach(s => s.classList.toggle('hidden', s.dataset.p !== b.dataset.t));
-  if(b.dataset.t === 'key') keyInfo(); });
+  if(b.dataset.t === 'key') keyInfo(); if(b.dataset.t === 'pw') agentState(); });
 $g('#admClose').onclick = () => $g('#adm').classList.remove('on');
 $g('#adm').addEventListener('click', e => { if(e.target.id === 'adm') $g('#adm').classList.remove('on'); });
 async function openAdmin(){ if(ROLE !== 'admin') return; $g('#adm').classList.add('on'); await loadLog(); }
@@ -1508,7 +1515,7 @@ async function reencrypt(path, aad, newDK, tok){
   }
   throw err('Http', 'The data kept changing. Try again in a minute.');
 }
-async function saveConfig({teamPw, adminPw, token, tokenExp}){
+async function saveConfig({teamPw, adminPw, token, tokenExp, agentPw, removeAgent}){
   const tok = token || SEC.token, appTok = token || SEC.appToken || SEC.token;
   const cr = await readFile(M.appOwner, M.appRepo, 'config.json', null, appTok);
   if(cr.status !== 200) throw err('Http', 'Cannot read the tracker settings in the app repo.');
@@ -1517,10 +1524,16 @@ async function saveConfig({teamPw, adminPw, token, tokenExp}){
   const base = {v: 1, dk: b64(newDK), dkPrev: rotate ? b64(DK) : (SEC.dkPrev || null), token: tok, tokenExp: tokenExp !== undefined ? tokenExp : (token ? '' : (SEC.tokenExp || '')), data: SEC.data, epoch: (SEC.epoch || 0) + (rotate ? 1 : 0)};
   let tSalt, tKek; if(teamPw){ tSalt = rnd(16); tKek = await kekFrom(teamPw, tSalt, iter); } else { tSalt = ub64(SEC.teamSalt); tKek = ub64(SEC.teamKek); }
   let aSalt = ub64(cfg.admin.salt), aKek = KEK; if(adminPw){ aSalt = rnd(16); aKek = await kekFrom(adminPw, aSalt, iter); }
-  const adm = Object.assign({}, base, {role: 'admin', appToken: appTok, teamPw: teamPw || SEC.teamPw || '', teamKek: b64(tKek), teamSalt: b64(tSalt)});
+  let gSalt = null, gKek = null;
+  if(agentPw){ gSalt = rnd(16); gKek = await kekFrom(agentPw, gSalt, iter); }
+  else if(!removeAgent && cfg.agent && SEC.agentKek){ gSalt = ub64(SEC.agentSalt); gKek = ub64(SEC.agentKek); }
+  const adm = Object.assign({}, base, {role: 'admin', appToken: appTok, teamPw: teamPw || SEC.teamPw || '', teamKek: b64(tKek), teamSalt: b64(tSalt),
+    agentKek: gKek ? b64(gKek) : null, agentSalt: gSalt ? b64(gSalt) : null, agentSetAt: agentPw ? new Date().toISOString() : (gKek ? SEC.agentSetAt || '' : '')});
   const cfg2 = Object.assign({}, cfg, {iter, changedAt: new Date().toISOString(),
     team: Object.assign({salt: b64(tSalt)}, await sealJSON(tKek, Object.assign({}, base, {role: 'team'}), 'cfg-team')),
     admin: Object.assign({salt: b64(aSalt)}, await sealJSON(aKek, adm, 'cfg-admin'))});
+  if(gKek) cfg2.agent = Object.assign({salt: b64(gSalt)}, await sealJSON(gKek, Object.assign({}, base, {role: 'agent'}), 'cfg-agent'));
+  else delete cfg2.agent;
   const w = await writeFile(M.appOwner, M.appRepo, 'config.json', JSON.stringify(cfg2, null, 1), cr.sha, 'Settings update', appTok);
   if(w.conflict) throw err('Http', 'The settings changed at the same moment. Try again.');
   const oldTok = SEC.token;
@@ -1539,6 +1552,20 @@ $g('#admTeamGo').onclick = async () => {
     msg('#admTeamMsg', 'Done. Share the new team password. The web page may take a minute to pick it up.', true); logAccess('Changed team password'); }
   catch(e){ msg('#admTeamMsg', e.message); }
   $g('#admTeamGo').disabled = false;
+};
+function agentState(){ $g('#admAgentState').textContent = CFG && CFG.agent ? `· set${SEC.agentSetAt ? ' ' + new Date(SEC.agentSetAt).toLocaleDateString([], {day: 'numeric', month: 'short'}) : ''}` : '· not set'; }
+$g('#admAgentGo').onclick = async () => {
+  const a = $g('#admG1').value, b = $g('#admG2').value; if(a.length < 16) return msg('#admAgentMsg', 'Use at least 16 characters for the agent password.'); if(a !== b) return msg('#admAgentMsg', 'The two entries do not match.');
+  msg('#admAgentMsg', 'Saving…', true); $g('#admAgentGo').disabled = true;
+  try { await saveConfig({agentPw: a}); $g('#admG1').value = $g('#admG2').value = ''; agentState(); msg('#admAgentMsg', 'Agent password set. Give it only to the script or agent that needs it.', true); logAccess('Set agent password'); }
+  catch(e){ msg('#admAgentMsg', e.message); }
+  $g('#admAgentGo').disabled = false;
+};
+$g('#admAgentOff').onclick = async () => {
+  if(!CFG.agent) return msg('#admAgentMsg', 'No agent password is set.');
+  if(!confirm('Remove agent access? Scripts using the agent password stop working.')) return;
+  msg('#admAgentMsg', 'Saving…', true);
+  try { await saveConfig({removeAgent: true}); agentState(); msg('#admAgentMsg', 'Agent access removed.', true); logAccess('Removed agent password'); } catch(e){ msg('#admAgentMsg', e.message); }
 };
 $g('#admAdmGo').onclick = async () => {
   const a = $g('#admA1').value, b = $g('#admA2').value, p = pwCheck(a, b); if(p) return msg('#admAdmMsg', p);
