@@ -668,7 +668,13 @@ function insertTask(t){ let i = -1; DB.tasks.forEach((x, j) => { if(x.artId === 
 const tgt = t => t.target || t.end;
 const barEnd = t => t.status === 'Done' && t.actual ? t.actual : tgt(t);
 const variance = t => t.actual ? wdDiff(t.end, t.actual) : (t.target ? wdDiff(t.end, t.target) : 0);
-function persist(){ store.set(LS, JSON.stringify({baseline: DB.baseline, base, dirty: [...dirty], db: DB})); renderMeta(); if(typeof schedulePush === 'function' && dirty.size) schedulePush(); }
+function persist(quiet){ store.set(LS, JSON.stringify({baseline: DB.baseline, base, dirty: [...dirty], db: DB})); renderMeta(); if(typeof schedulePush === 'function' && dirty.size) schedulePush(); if(!quiet) bcSend(); }
+// ---------- live updates between tabs and windows of the same browser ----------
+const TAB_ID = Math.random().toString(36).slice(2), BC = 'BroadcastChannel' in window ? new BroadcastChannel('obs-poc-tracker-' + (FILE.baseline || '')) : null; let bcT = null;
+function bcSend(){ if(!BC) return; clearTimeout(bcT); bcT = setTimeout(() => { try { BC.postMessage({tab: TAB_ID, db: {tasks: DB.tasks, artOrder: DB.artOrder || {}}}); } catch(e){} }, 200); }
+if(BC) BC.onmessage = ev => { const m = ev.data; if(!m || m.tab === TAB_ID || !m.db || typeof mergeFrom !== 'function') return;
+  const r = mergeFrom(m.db, true);   // keep both tabs' pending pushes; never drop a dirty mark here
+  if(r.n){ persist(true); fillOwners(); render(); if(typeof refreshDrawerHead === 'function') refreshDrawerHead(); } };
 function logChange(t, what){ (t.log = t.log || []).unshift({at: new Date().toISOString(), by: who() || 'Unknown', what}); t.log = t.log.slice(0, 30); }
 const allDates = FILE.tasks.flatMap(t => [t.start, t.end]).sort();
 const WIN0 = fd(new Date(pd(allDates[0]).getTime() - 30*864e5)), WIN1 = fd(new Date(pd(allDates[allDates.length-1]).getTime() + 60*864e5));
@@ -782,7 +788,7 @@ function taskRow(t, extra){
     <div class="t2">${esc(t.artifact)} · ${esc(t.owner)}</div>
     ${t.notes ? `<div class="np" title="${esc(plainNotes(t.notes).slice(0, 300))}">📝 ${esc(plainNotes(t.notes).replace(/\s+/g, ' ').slice(0, 90))}</div>` : ''}
     ${t.blocker && t.status !== 'Done' ? `<div class="blk">⚠ ${esc(t.blocker)}</div>` : ''}</div>
-    <div class="r">${extra || ''}<div>${t.status === 'Done' && t.actual ? 'Done ' + short(t.actual) : 'Target ' + short(tgt(t))}${varBadge(t)}</div></div></div>`;
+    <div class="r">${extra || ''}<div>${t.status === 'Done' && t.actual ? 'Done ' + short(t.actual) : 'Target ' + short(tgt(t))}</div></div></div>`;
 }
 function emptyMsg(){ return `<div class="empty">Nothing here${filtering() ? ' for the current filters. <button class="clear" data-clear>Clear filters</button>' : '.'}</div>`; }
 function grouped(list, extraFn){
@@ -810,10 +816,11 @@ function renderToday(){
   const doneOn = doneAll.filter(t => (t.actual || tgt(t)) === d).length;
   const left = t => { const n = wdDiff(d, tgt(t)); return `<div class="${n <= 0 ? 'od' : ''}">${n < 0 ? -n + 'd overdue' : n === 0 ? 'Due today' : n === 1 ? 'Due tomorrow' : 'Due in ' + n + ' days'}</div>`; };
   $('#lDue').innerHTML = !dueOpen.length ? `<div class="empty">No started tasks are open ${R ? 'between ' + nice(R.from) + ' and ' + nice(R.to) : 'on ' + nice(d)}${(sec || $('#fOwner').value || $('#fStatus').value || $('#fText').value.trim()) ? ' for the other filters. <button class="clear" data-clear>Clear filters</button>' : '.'}</div>` : grouped(dueOpen, left);
-  $('#cDue').textContent = dueToday ? `${dueOpen.length} · ${dueToday} due ${R ? 'today' : short(d)}` : dueOpen.length;
+  $('#cDue').textContent = !dueToday ? dueOpen.length : dueToday === dueOpen.length ? `${dueToday} due ${R ? 'today' : short(d)}` : `${dueOpen.length} · ${dueToday} due ${R ? 'today' : short(d)}`;
   $('#lOver').innerHTML = grouped(bySec(over), t => { const od = tgt(t) < d ? wdDiff(tgt(t), d) : 0; return `<div class="od">${t.status === 'Blocked' ? 'Blocked' : ''}${t.status === 'Blocked' && od ? ' · ' : ''}${od ? od + 'd overdue' : ''}</div>`; });
   $('#cOver').textContent = over.length;
-  $('#lDone').innerHTML = doneAll.length ? doneAll.map(t => taskRow(t)).join('') : emptyMsg();
+  doneAll.sort((a, b) => secI(a) - secI(b) || (b.actual || tgt(b)).localeCompare(a.actual || tgt(a)));   // by section, newest first
+  $('#lDone').innerHTML = grouped(doneAll);
   $('#cDone').textContent = !R && doneOn ? `${doneAll.length} · ${doneOn} on ${short(d)}` : doneAll.length;
   $('#tDue').textContent = dueOpen.length; $('#tOver').textContent = over.length; $('#tDone').textContent = doneAll.length;
   const done = all.filter(t => t.status === 'Done').length, pct = all.length ? Math.round(done / all.length * 100) : 0;
