@@ -6,6 +6,7 @@
 <title>OBS PoC Tracker</title>
 <style>
 :root{--red:#DA291C;--navy:#212F3D;--ink:#2B3A48;--mut:#6B7785;--line:#E3E7EC;--bg:#F5F7F9;--card:#fff;
+--ease-out:cubic-bezier(0.23,1,0.32,1);--ease-in-out:cubic-bezier(0.77,0,0.175,1);--ease-drawer:cubic-bezier(0.32,0.72,0,1);
 --done:#2E7D32;--doneBg:#E6F4E8;--prog:#1F5FA8;--progBg:#E7F0FA;--blk:#DA291C;--blkBg:#FDE9E7;--nsBg:#F1F3F6;}
 *{box-sizing:border-box}
 html{height:100%;overflow-x:hidden}
@@ -28,7 +29,7 @@ header .sp{flex:1}
 .who{background:rgba(255,255,255,.95);border:0;border-radius:6px;padding:8px 10px;width:150px;color:var(--ink);min-height:36px}
 #bMore{display:none}
 .menu{position:absolute;right:14px;top:54px;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:6px;display:none;z-index:35;min-width:220px}
-.menu.on{display:block}
+.menu.on{display:block;animation:pop 160ms var(--ease-out);transform-origin:top right}
 .menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:12px 14px;border-radius:6px;cursor:pointer;color:var(--ink)}
 .menu button:hover{background:var(--bg)}
 nav{background:var(--navy);display:flex;align-items:center;gap:4px;padding:0 22px}
@@ -51,8 +52,8 @@ main{padding:8px 22px 40px}
 .banner.warn{background:#FDE9E7;border-color:#F3B4AE}
 .banner button{border:1px solid #D9B860;background:#fff;border-radius:6px;padding:6px 10px;cursor:pointer}
 .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:10px 0 16px}
-.kpi{background:var(--card);border-radius:10px;padding:14px 16px;border:1px solid var(--line);cursor:pointer;transition:transform .12s, box-shadow .12s;text-align:left}
-.kpi:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(33,47,61,.08)}
+.kpi{background:var(--card);border-radius:10px;padding:14px 16px;border:1px solid var(--line);cursor:pointer;transition:transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out), border-color 150ms;text-align:left}
+@media (hover:hover) and (pointer:fine){.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(33,47,61,.08)}}
 .kpi .n{font-size:30px;font-weight:bold;color:var(--navy)}
 .kpi .l{font-size:13px;color:var(--mut);margin-top:2px}
 .kpi.alert .n{color:var(--red)}
@@ -66,7 +67,7 @@ main{padding:8px 22px 40px}
 .panel.red h3{color:var(--red)}
 .list{max-height:62vh;overflow:auto}
 .empty{padding:18px 14px;color:var(--mut);font-size:13px}
-.task{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .1s}
+.task{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;transition:background 150ms var(--ease-out)}
 .task:hover{background:#FAFBFC}
 .task.isdone{opacity:.6}
 .task .t1{font-weight:bold;font-size:14px}
@@ -130,10 +131,10 @@ body.nosel{user-select:none;-webkit-user-select:none}
 .legend i{display:inline-block;width:18px;height:10px;border-radius:3px}
 .lbtn{border:1px solid var(--line);background:#fff;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:13px;color:var(--ink)}
 /* drawer */
-.scrim{position:fixed;inset:0;background:rgba(20,28,36,.32);opacity:0;pointer-events:none;transition:opacity .18s;z-index:40}
+.scrim{position:fixed;inset:0;background:rgba(20,28,36,.32);opacity:0;pointer-events:none;transition:opacity 300ms var(--ease-drawer);z-index:40}
 .scrim.on{opacity:1;pointer-events:auto}
-.drawer{position:fixed;top:0;right:0;height:100%;width:440px;max-width:100%;background:#fff;z-index:41;transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.12);visibility:hidden}
-.drawer.on{transform:none;visibility:visible}
+.drawer{position:fixed;top:0;right:0;height:100%;width:440px;max-width:100%;background:#fff;z-index:41;transform:translateX(100%);transition:transform 320ms var(--ease-drawer),visibility 0s linear 320ms;display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.12);visibility:hidden}
+.drawer.on{transform:none;visibility:visible;transition:transform 380ms var(--ease-drawer),visibility 0s}
 .dh{background:var(--navy);color:#fff;padding:16px 18px}
 .dh .id{font-size:12px;opacity:.8}
 .dh h2{margin:4px 0 2px;font-size:18px}
@@ -158,11 +159,9 @@ body.nosel{user-select:none;-webkit-user-select:none}
 .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
 .btn{border:1px solid var(--line);background:#fff;border-radius:6px;padding:9px 16px;cursor:pointer;min-height:38px}
 .btn.pri{background:var(--red);color:#fff;border-color:var(--red);font-weight:bold}
-.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--navy);color:#fff;padding:10px 16px;border-radius:8px;opacity:0;transition:all .2s;z-index:60;font-size:13px;display:flex;gap:12px;align-items:center;pointer-events:none;max-width:92vw}
-.toast.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
-.toast button{background:none;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:5px;padding:4px 10px;cursor:pointer}
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50;background:rgba(20,28,36,.38)}
-.modal.on{display:flex}
+.modal.on{display:flex;animation:fade 200ms var(--ease-out)}
+.modal.on .box{animation:pop 220ms var(--ease-out)}
 .modal .box{background:#fff;border-radius:12px;max-width:620px;width:92%;padding:20px 24px;max-height:85vh;overflow:auto}
 .modal h2{margin:0 0 10px;color:var(--navy);font-size:18px}
 .modal ol{padding-left:20px;line-height:1.6}
@@ -211,7 +210,6 @@ body.ghm .fileonly,body.ghm [data-act=connect],body.ghm #bSave{display:none!impo
  .bar.fopen .chips{display:flex}.bar.fopen select,.bar.fopen input[type=search]{display:block}
  .daynav{flex:1;width:auto}
  .hbtn,.chip,.bar select,.bar input[type=search],select.pill,.seg button,.btn,.menu button,.lbtn,.drawer input[type=date],.drawer input[type=text],.modal input[type=text]{min-height:44px}
- .toast button{min-height:40px;padding:8px 14px}
  .ptabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
  .ptabs button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px 6px;font-weight:bold;cursor:pointer;color:var(--ink);min-height:44px}
  .ptabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
@@ -233,6 +231,44 @@ body.ghm .fileonly,body.ghm [data-act=connect],body.ghm #bSave{display:none!impo
  .row2{grid-template-columns:1fr}
 }
 @media (hover:none){.gbar:hover,.kpi:hover{filter:none;transform:none;box-shadow:none}}
+
+/* ---------- motion (Emil Kowalski principles: ease-out, short, transform+opacity only) ---------- */
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+button{transition:transform 160ms var(--ease-out),background-color 150ms var(--ease-out),border-color 150ms,color 150ms,box-shadow 150ms}
+button:not(:disabled):active{transform:scale(.97)}
+.kpi:not(:disabled):active{transform:scale(.98)}
+.chip,.btn,.hbtn,.lbtn,.seg button,.ptabs button,nav button{transition:transform 160ms var(--ease-out),background-color 150ms var(--ease-out),border-color 150ms,color 150ms}
+.spinner{display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:spin 700ms linear infinite;vertical-align:-3px;opacity:.85}
+.spinner.lg{width:28px;height:28px;border-width:3px}
+.intro .kpis > *{animation:rise 420ms var(--ease-out) both}
+.intro .kpis > *:nth-child(2){animation-delay:40ms}.intro .kpis > *:nth-child(3){animation-delay:80ms}
+.intro .kpis > *:nth-child(4){animation-delay:120ms}.intro .kpis > *:nth-child(5){animation-delay:160ms}
+.intro .cols > *{animation:rise 480ms var(--ease-out) both}
+.intro .cols > *:nth-child(2){animation-delay:70ms}.intro .cols > *:nth-child(3){animation-delay:140ms}
+.viewin{animation:fade 180ms var(--ease-out)}
+.pill.flash{animation:pop 260ms var(--ease-out)}
+.skel{background:linear-gradient(90deg,#EEF1F4 25%,#F6F8FA 37%,#EEF1F4 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;border-radius:6px}
+/* ---------- toaster (Sonner-style stack) ---------- */
+#toaster{position:fixed;right:24px;bottom:24px;width:360px;max-width:calc(100vw - 32px);z-index:90;pointer-events:none}
+.tst{position:absolute;right:0;bottom:0;width:100%;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 20px rgba(20,28,36,.12);padding:13px 14px;display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4;pointer-events:auto;touch-action:none;user-select:none;
+  transform:translateY(var(--y,0)) scale(var(--s,1));opacity:var(--o,1);transform-origin:bottom center;transition:transform 400ms var(--ease-out),opacity 400ms var(--ease-out);will-change:transform}
+.tst[data-state=enter]{transform:translateY(110%);opacity:0}
+.tst[data-state=exit]{transform:translateY(calc(var(--y,0px) + 30%)) scale(var(--s,1));opacity:0;transition-duration:220ms}
+.tst.dragging{transition:none}
+.tst .ic{flex:0 0 18px;height:18px;margin-top:1px}
+.tst .ic svg{width:18px;height:18px;display:block}
+.tst .tx{flex:1;min-width:0;word-wrap:break-word;padding-top:1px}
+.tst .ac{flex:0 0 auto;border:0;background:var(--navy);color:#fff;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:bold;cursor:pointer;margin-left:4px}
+.tst .x{flex:0 0 auto;border:0;background:none;color:var(--mut);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;opacity:0;transition:opacity 150ms}
+.tst:hover .x,.tst:focus-within .x{opacity:1}
+.tst.success .ic{color:#2E7D32}.tst.error .ic{color:var(--red)}.tst.info .ic{color:var(--prog)}.tst.loading .ic{color:var(--mut)}
+.tst.error{border-color:#F3C4BF}
+@media (max-width:760px){#toaster{right:16px;left:16px;width:auto;bottom:16px}.tst .x{opacity:1}.tst .ac{min-height:36px;padding:8px 12px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.spinner{animation-duration:1.4s!important;animation-iteration-count:infinite!important}}
 </style>
 </head>
 <body>
@@ -360,7 +396,7 @@ body.ghm .fileonly,body.ghm [data-act=connect],body.ghm #bSave{display:none!impo
   <div style="text-align:right"><button class="btn pri" id="helpClose">Got it</button></div>
 </div></div>
 <div class="dtip" id="dtip"></div>
-<div class="toast" id="toast" role="status"><span id="toastTxt"></span><button id="toastUndo" class="hidden">Undo</button></div>
+<section id="toaster" aria-live="polite" aria-label="Notifications"></section>
 
 <script>window.__GH_MODE = {appOwner: "calvin-tung", appRepo: "obs-poc-tracker-app"};</script>
 <script id="tracker-data" type="application/json">null</script>
@@ -500,6 +536,7 @@ $('#dToday').onclick = () => { viewDay = realToday; weekendNote = false; if(!isW
 document.querySelectorAll('nav button[data-v]').forEach(b => b.onclick = () => {
   view = b.dataset.v; document.querySelectorAll('nav button[data-v]').forEach(x => x.classList.toggle('on', x === b));
   $('#vToday').classList.toggle('hidden', view !== 'today'); $('#vPlan').classList.toggle('hidden', view !== 'plan'); render();
+  const sec = view === 'today' ? $('#vToday') : $('#vPlan'); sec.classList.remove('viewin'); void sec.offsetWidth; sec.classList.add('viewin');
 });
 $('#ptabs').addEventListener('click', e => { const b = e.target.closest('button'); if(b) selectPanel(b.dataset.p); });
 function selectPanel(p){ panelSel = p; document.querySelectorAll('#ptabs button').forEach(b => b.classList.toggle('on', b.dataset.p === p)); document.querySelectorAll('.cols .panel').forEach(x => x.classList.toggle('on', x.id === p)); document.querySelectorAll('.kpi[data-go]').forEach(k => k.classList.toggle('sel', k.dataset.go === p)); }
@@ -624,6 +661,7 @@ document.addEventListener('change', e => {
   needName(() => {
     const bv = vals(t), logLen = (t.log || []).length;
     setStatus(t, val); stamp(t, bv); persist(); render();
+    document.querySelectorAll(`select.pill[data-id="${t.id}"]`).forEach(x => x.classList.add('flash'));
     undo = () => { const av = vals(t); Object.assign(t, bv); t.log = (t.log || []).slice((t.log || []).length - logLen); logChange(t, 'Undo'); stamp(t, av); persist(); render(); toast(`Undone: ${t.id}`); };
     toast(`${t.id} → ${t.status}${val === 'Done' ? ' (actual ' + short(t.actual) + ')' : ''}`, true);
   });
@@ -824,8 +862,57 @@ function showBanner(kind, txt){
   const d = $('#bDiscard'); if(d) d.onclick = () => { if(confirm(kind === 'older' ? 'Show the older file and drop your newer local data?' : 'Discard your local edits and show the file version?')){ store.del(LS); location.reload(); } };
   $('#bHide').onclick = () => $('#banner').classList.remove('show');
 }
-let tt; function toast(m, withUndo){ $('#toastTxt').textContent = m; $('#toastUndo').classList.toggle('hidden', !withUndo); $('#toast').classList.add('on'); clearTimeout(tt); tt = setTimeout(() => { $('#toast').classList.remove('on'); undo = null; }, withUndo ? 5000 : 2800); }
-$('#toastUndo').onclick = () => { const u = undo; undo = null; $('#toast').classList.remove('on'); u && u(); };
+// ---------- toaster: stacked, hover to expand, swipe to dismiss, pauses on hover ----------
+const ICONS = {success: '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>',
+  error: '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>',
+  info: '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd"/></svg>',
+  loading: '<span class="spinner"></span>'};
+const TOASTS = []; let tExpanded = false, tid = 0;
+const toaster = $('#toaster');
+function layoutToasts(){
+  const live = TOASTS.filter(t => !t.gone); let off = 0;
+  live.slice().reverse().forEach((t, i) => {
+    const el = t.el;
+    if(tExpanded){ el.style.setProperty('--y', -off + 'px'); el.style.setProperty('--s', 1); el.style.setProperty('--o', i < 4 ? 1 : 0); off += el.offsetHeight + 10; }
+    else { el.style.setProperty('--y', -(i * 12) + 'px'); el.style.setProperty('--s', 1 - i * 0.05); el.style.setProperty('--o', i < 3 ? 1 : 0); }
+    el.style.zIndex = 100 - i; el.style.pointerEvents = i < (tExpanded ? 4 : 3) ? 'auto' : 'none';
+  });
+  toaster.style.height = (tExpanded ? off : (live[live.length - 1] ? live[live.length - 1].el.offsetHeight + Math.min(2, live.length - 1) * 12 : 0)) + 'px';
+}
+function dismissToast(t){
+  if(!t || t.gone) return; t.gone = true; clearTimeout(t.timer); t.el.dataset.state = 'exit';
+  setTimeout(() => { t.el.remove(); const i = TOASTS.indexOf(t); if(i >= 0) TOASTS.splice(i, 1); layoutToasts(); }, 230);
+  layoutToasts();
+}
+function armToast(t){ clearTimeout(t.timer); if(t.type === 'loading') return; t.left = t.left == null ? t.dur : t.left; t.started = Date.now(); t.timer = setTimeout(() => dismissToast(t), t.left); }
+function pauseToasts(){ TOASTS.forEach(t => { if(t.timer && !t.gone){ clearTimeout(t.timer); t.timer = null; t.left = Math.max(800, t.left - (Date.now() - t.started)); } }); }
+function resumeToasts(){ TOASTS.forEach(t => { if(!t.gone && !t.timer) armToast(t); }); }
+function toast(m, withUndo, type){
+  type = type || (/could not|error|failed|stopped|cannot/i.test(m) ? 'error' : withUndo || /^Saved|saved|Done|Undone|downloaded|merged|on\./i.test(m) ? 'success' : 'info');
+  const t = {id: ++tid, type, dur: withUndo ? 6000 : type === 'error' ? 7000 : 3800, action: withUndo ? undo : null};
+  const el = document.createElement('div'); el.className = 'tst ' + type; el.dataset.state = 'enter'; el.setAttribute('role', type === 'error' ? 'alert' : 'status');
+  el.innerHTML = `<span class="ic">${ICONS[type]}</span><span class="tx"></span>${withUndo ? '<button class="ac" data-act="undo">Undo</button>' : ''}<button class="x" aria-label="Dismiss">×</button>`;
+  el.querySelector('.tx').textContent = m; t.el = el;
+  el.querySelector('.x').onclick = () => dismissToast(t);
+  const ub = el.querySelector('[data-act=undo]'); if(ub) ub.onclick = () => { const u = t.action; t.action = null; undo = null; dismissToast(t); u && u(); };
+  // swipe to dismiss (down or right), with momentum
+  let sx = 0, sy = 0, st = 0, drag = false;
+  el.addEventListener('pointerdown', e => { if(e.target.closest('button')) return; drag = true; sx = e.clientX; sy = e.clientY; st = Date.now(); el.setPointerCapture(e.pointerId); el.classList.add('dragging'); });
+  el.addEventListener('pointermove', e => { if(!drag) return; const dx = Math.max(0, e.clientX - sx), dy = Math.max(0, e.clientY - sy), d = Math.max(dx, dy);
+    el.style.transform = dx > dy ? `translate(${dx}px, var(--y)) scale(var(--s))` : `translateY(calc(var(--y) + ${dy}px)) scale(var(--s))`; el.style.opacity = Math.max(0.2, 1 - d / 160); });
+  const end = e => { if(!drag) return; drag = false; el.classList.remove('dragging'); const d = Math.max(e.clientX - sx, e.clientY - sy), v = d / Math.max(1, Date.now() - st);
+    el.style.transform = ''; el.style.opacity = ''; if(d > 60 || v > 0.45) dismissToast(t); };
+  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+  toaster.appendChild(el); TOASTS.push(t);
+  const live = TOASTS.filter(x => !x.gone); if(live.length > 5) dismissToast(live[0]);
+  requestAnimationFrame(() => { layoutToasts(); requestAnimationFrame(() => { el.dataset.state = 'in'; }); });
+  if(tExpanded || document.hidden) t.left = t.dur; else armToast(t);
+  return {update(msg, ty){ el.querySelector('.tx').textContent = msg; if(ty){ t.type = ty; el.className = 'tst ' + ty; el.querySelector('.ic').innerHTML = ICONS[ty]; } t.left = null; armToast(t); }, dismiss(){ dismissToast(t); }};
+}
+toaster.addEventListener('mouseenter', () => { tExpanded = true; pauseToasts(); layoutToasts(); });
+toaster.addEventListener('mouseleave', () => { tExpanded = false; resumeToasts(); layoutToasts(); });
+document.addEventListener('visibilitychange', () => document.hidden ? pauseToasts() : resumeToasts());
+window.__toast = toast;
 
 
 // ---------- live sync with the OneDrive file (Chrome / Edge) ----------
@@ -837,12 +924,14 @@ function buildHtml(db){ const json = JSON.stringify(db).replace(/</g, '\\u003c')
 function idbOpen(){ return new Promise((res, rej) => { const r = indexedDB.open('obs-poc-tracker', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
 async function idbGet(k){ try { const db = await idbOpen(); return await new Promise(res => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); } catch(e){ return null; } }
 async function idbSet(k, v){ try { const db = await idbOpen(); await new Promise(res => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = res; tx.onerror = res; }); } catch(e){} }
-function setSync(st, msg){ syncState = st; syncMsg = msg || ''; renderSync(); renderMeta(); }
+function setSync(st, msg){ const prev = syncState; syncState = st; syncMsg = msg || ''; renderSync(); renderMeta();
+  if(st === 'err' && prev !== 'err') toast((GH ? 'Could not save to GitHub: ' : 'Sync error: ') + (msg || 'connection problem') + '. Retrying.', false, 'error');
+  if(st === 'ok' && prev === 'err') toast('Back online. Changes are saving again.', false, 'success'); }
 function renderSync(){
   const b = $('#sync'); if(!b) return;
   const t = lastSyncAt ? fmtTs(lastSyncAt).split(' ').pop() : '';
   const v = {off: ['', 'Connect OneDrive file', 'Connect'], nofsa: ['nofsa', 'Manual save mode', ''], ok: ['ok', '✓ Live sync' + (t ? ' ' + t : ''), '✓ Synced'],
-    busy: ['busy', 'Syncing…', 'Syncing…'], perm: ['warn', 'Resume sync', 'Resume'], err: ['err', 'Sync error: retry', 'Retry']}[syncState];
+    busy: ['busy', '<span class="spinner" style="width:12px;height:12px;margin-right:6px"></span>Saving…', '<span class="spinner" style="width:12px;height:12px"></span>'], perm: ['warn', 'Resume sync', 'Resume'], err: ['err', 'Sync error: retry', 'Retry']}[syncState];
   if(GH && v[1] === 'Connect OneDrive file'){ v[1] = 'Connecting…'; v[2] = '…'; }
   b.className = 'sync ' + v[0]; b.innerHTML = `<span class="lg">${v[1]}</span><span class="sm">${v[2]}</span>`;
   b.title = {off: 'Pick the tracker file in your synced OneDrive folder. Changes then save into it automatically.', nofsa: 'This browser cannot write files. Use Save tracker, or open in Chrome or Edge for live sync.',
@@ -950,6 +1039,7 @@ window.addEventListener('pointerup', () => endDrag(false));
 window.addEventListener('pointercancel', () => endDrag(true));
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && drag) endDrag(true); });
 
+document.body.classList.add('intro'); setTimeout(() => document.body.classList.remove('intro'), 900);
 fillOwners(); renderMeta(); render();
 store.get(LS); // probe
 if(!storageOK) showBanner('nostore', 'Autosave is off in this browser. Click Save tracker before you close the page, or your edits are lost.');
@@ -973,7 +1063,15 @@ if(!window.__GH_MODE) window.__startTracker(null);
 #ghGate .go{width:100%;margin-top:16px;min-height:46px;font-size:15px}
 #ghGate .err{color:var(--red);font-size:13px;min-height:18px;margin-top:10px;font-weight:bold}
 #ghGate .foot{font-size:12px;color:var(--mut);margin-top:10px;line-height:1.5}
-#ghGate .spin{color:var(--mut);font-size:14px;padding:10px 0}
+#ghGate{transition:opacity 260ms var(--ease-out)}
+#ghGate.out{opacity:0;pointer-events:none}
+#ghGate .gh-card{animation:pop 320ms var(--ease-out)}
+#ghGate .spin{color:var(--mut);font-size:14px;padding:22px 0 14px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+#ghGate .spin .spinner{color:var(--red)}
+#ghForm{animation:fade 220ms var(--ease-out)}
+#ghGate .go .spinner{margin-right:8px;color:#fff}
+#ghGate .err:not(:empty){animation:shake 320ms var(--ease-out)}
+@keyframes shake{20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
 .adm .box{max-width:1000px;width:94%}
 .adm .tabs{display:flex;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--line);overflow-x:auto}
 .adm .tabs button{border:0;background:none;padding:10px 14px;cursor:pointer;font-weight:bold;color:var(--mut);border-bottom:3px solid transparent;white-space:nowrap;min-height:44px}
@@ -1006,7 +1104,7 @@ body.ghm-admin .menu [data-gh=admin]{display:block}
   <div class="gh-top">OBS PoC Tracker</div>
   <div class="gh-card">
     <h2>Sign in</h2>
-    <div class="spin" id="ghLoad">Loading…</div>
+    <div class="spin" id="ghLoad"><span class="spinner lg"></span><span id="ghLoadTx">Loading the tracker…</span></div>
     <form id="ghForm" class="hidden" autocomplete="on">
       <p class="sub" id="ghSub">Enter the team password to open the tracker.</p>
       <label class="l" for="ghName">Your name</label><input type="text" id="ghName" autocomplete="name" placeholder="e.g. Calvin Tung">
@@ -1215,13 +1313,14 @@ async function logAccess(event){
 
 // ---------- gate ----------
 function showForm(msg, sub){
-  $g('#ghGate').classList.remove('hidden'); $g('#ghLoad').classList.add('hidden'); $g('#ghForm').classList.remove('hidden');
+  $g('#ghGate').classList.remove('hidden', 'out'); $g('#ghLoad').classList.add('hidden'); $g('#ghForm').classList.remove('hidden');
   $g('#ghErr').textContent = msg || ''; if(sub) $g('#ghSub').textContent = sub;
   $g('#ghName').value = $g('#ghName').value || (function(){ try { return localStorage.getItem(LSMAIN + '-who') || ''; } catch(e){ return ''; } })();
   $g('#ghRem').checked = (function(){ try { return localStorage.getItem(REM + '-pref') === '1'; } catch(e){ return false; } })();
   setTimeout(() => ($g('#ghName').value ? $g('#ghPw') : $g('#ghName')).focus(), 30);
 }
-function busy(t){ $g('#ghGo').disabled = !!t; $g('#ghGo').textContent = t || 'Unlock'; }
+function busy(t){ const b = $g('#ghGo'); b.disabled = !!t; b.innerHTML = t ? '<span class="spinner"></span>' + escg(t) : 'Unlock'; }
+function loading(t){ $g('#ghForm').classList.add('hidden'); $g('#ghLoad').classList.remove('hidden'); $g('#ghLoadTx').textContent = t; }
 async function tryPassword(pw){
   for(const role of ['team', 'admin']){
     if(!CFG[role]) continue;
@@ -1238,10 +1337,11 @@ async function enter(res, event){
   try { localStorage.setItem(LSMAIN + '-who', NAME); } catch(e){}
   setRem(PERSIST);
   document.body.classList.toggle('ghm-admin', ROLE === 'admin');
-  $g('#ghGate').classList.add('hidden'); document.body.classList.add('ghm-on');
+  document.body.classList.add('ghm-on'); $g('#ghGate').classList.add('out'); setTimeout(() => { $g('#ghGate').classList.add('hidden'); $g('#ghGate').classList.remove('out'); }, 270);
   started = true;
   window.__startTracker(GH);
   logAccess(event);
+  if(/^Signed in/.test(event) && window.__toast) setTimeout(() => window.__toast(`Signed in as ${NAME}${ROLE === 'admin' ? ' (admin)' : ''}`, false, 'success'), 320);
   if(ROLE === 'admin') setTimeout(keyWarn, 1500);
 }
 $g('#ghForm').addEventListener('submit', async e => {
@@ -1255,13 +1355,13 @@ $g('#ghForm').addEventListener('submit', async e => {
     const res = await tryPassword(pw);
     if(!res){ busy(); $g('#ghErr').textContent = 'That password is not right. Check with the tracker admin.'; $g('#ghPw').select(); return; }
     NAME = name; PERSIST = $g('#ghRem').checked; try { localStorage.setItem(REM + '-pref', PERSIST ? '1' : '0'); } catch(x){}
-    busy('Loading…'); await enter(res, 'Signed in' + (PERSIST ? ' (remember me)' : ''));
+    loading('Opening the tracker…'); await enter(res, 'Signed in' + (PERSIST ? ' (remember me)' : ''));
     $g('#ghPw').value = ''; busy();
-  } catch(x){ busy(); $g('#ghErr').textContent = x.message || String(x); }
+  } catch(x){ busy(); $g('#ghLoad').classList.add('hidden'); $g('#ghForm').classList.remove('hidden'); $g('#ghErr').textContent = x.message || String(x); }
 });
 async function boot(){
   try { CFG = await loadConfig(); }
-  catch(e){ $g('#ghLoad').textContent = e.message; return; }
+  catch(e){ $g('#ghLoadTx').textContent = e.message; $g('#ghLoad').querySelector('.spinner').remove(); return; }
   const rem = getRem();
   if(rem && CFG[rem.role] && CFG[rem.role].salt === rem.salt){
     try {
@@ -1271,7 +1371,7 @@ async function boot(){
       await enter({role: rem.role, kek, sec}, rem.persist ? 'Opened (remembered)' : 'Opened (same session)');
       return;
     } catch(e){
-      if(e.name === 'Auth' || e.name === 'Network' || e.name === 'Http'){ $g('#ghLoad').textContent = e.message; showForm(e.message); return; }
+      if(e.name === 'Auth' || e.name === 'Network' || e.name === 'Http'){ showForm(e.message); return; }
     }
   }
   if(rem){ clearRem(); showForm('', 'The password has changed since you last signed in. Enter the new password.'); return; }
@@ -1307,7 +1407,7 @@ async function signOut(){
 // ---------- admin ----------
 let LOG = [];
 const fmt = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}); };
-function msg(id, t, ok){ const el = $g(id); el.textContent = t; el.className = 'msg ' + (ok ? 'ok' : 'bad'); }
+function msg(id, t, ok){ const el = $g(id); el.textContent = t; el.className = 'msg ' + (ok ? 'ok' : 'bad'); const busyNow = /…$/.test(t); el.innerHTML = (busyNow ? '<span class="spinner" style="width:13px;height:13px;margin-right:6px"></span>' : '') + escg(t); if(!busyNow && window.__toast) window.__toast(t, false, ok ? 'success' : 'error'); }
 $g('#admTabs').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return;
   document.querySelectorAll('#admTabs button').forEach(x => x.classList.toggle('on', x === b));
   document.querySelectorAll('#adm section').forEach(s => s.classList.toggle('hidden', s.dataset.p !== b.dataset.t));
@@ -1316,7 +1416,7 @@ $g('#admClose').onclick = () => $g('#adm').classList.remove('on');
 $g('#adm').addEventListener('click', e => { if(e.target.id === 'adm') $g('#adm').classList.remove('on'); });
 async function openAdmin(){ if(ROLE !== 'admin') return; $g('#adm').classList.add('on'); await loadLog(); }
 async function loadLog(){
-  $g('#admSum').textContent = 'Loading…';
+  $g('#admSum').innerHTML = '<span class="spinner" style="width:13px;height:13px;margin-right:6px"></span>Loading sign-ins…'; $g('#admPeople').innerHTML = $g('#admRows').innerHTML = '<tr><td colspan="6"><div class="skel" style="height:14px;margin:4px 0"></div><div class="skel" style="height:14px;margin:8px 0;width:70%"></div></td></tr>';
   try { LOG = (await readLog()).arr.slice().reverse(); } catch(e){ $g('#admSum').textContent = e.message; return; }
   const ppl = {}; LOG.forEach(r => { const k = r.name || 'Unknown'; if(!ppl[k]) ppl[k] = {n: 0, last: r}; if(/^Signed in|^Opened/.test(r.event)) ppl[k].n++; });
   const wk = Date.now() - 7 * 864e5, recent = new Set(LOG.filter(r => new Date(r.at) > wk).map(r => r.name));
