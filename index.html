@@ -97,7 +97,14 @@ select.pill{appearance:none;-webkit-appearance:none;cursor:pointer;text-align:ce
 .gh.now{box-shadow:inset 0 -4px 0 #fff}
 .gh small{display:block;font-weight:normal;opacity:.8}
 .lc{position:sticky;left:0;background:#fff;z-index:4;border-bottom:1px solid var(--line);border-right:1px solid var(--line);display:grid;grid-template-columns:22px 110px 1fr 112px;align-items:center;gap:6px;padding:0 10px;height:34px;font-size:13px}
-.lc.art{background:#F4F6F8;font-weight:bold;height:38px;cursor:pointer}
+.lc.art{background:#F4F6F8;font-weight:bold;height:38px;cursor:pointer;grid-template-columns:22px 110px 1fr 26px 112px}
+.addst{width:24px;height:24px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--navy);font-weight:bold;cursor:pointer;line-height:1;padding:0;opacity:.0}
+.lc.art:hover .addst,.addst:focus-visible{opacity:1}
+@media (hover:none){.addst{opacity:1}}
+.lbtn.pri{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:bold}
+.btn.danger{color:var(--red);border-color:#F3C4BF}
+.modal select,.modal input[type=date]{width:100%;border:1px solid var(--line);border-radius:6px;padding:9px 10px;min-height:38px;background:#fff}
+.lc.step .new{font-size:10px;font-weight:bold;color:var(--prog);background:var(--progBg);border-radius:4px;padding:0 5px;margin-left:4px}
 .lc.secrow{background:#fff;color:var(--red);font-weight:bold;font-size:14px;grid-template-columns:1fr;height:36px;border-bottom:2px solid var(--red)}
 .lc .id{font-size:11px;color:var(--mut);font-weight:normal}
 .lc .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -347,7 +354,7 @@ button:not(:disabled):active{transform:scale(.97)}
       <span><i style="border-left:2px dashed #212F3D;height:12px;width:0;border-radius:0"></i>Real today</span>
       <span style="flex:1"></span>
       <span class="dghint">Drag a bar to move it, drag its edge to change duration</span>
-      <button class="lbtn" id="bExpand">Expand all</button><button class="lbtn" id="bCollapse">Collapse all</button>
+      <button class="lbtn pri" id="bAddStep">+ Add step</button><button class="lbtn" id="bExpand">Expand all</button><button class="lbtn" id="bCollapse">Collapse all</button>
     </div>
     <div class="plan" id="plan"></div>
   </section>
@@ -372,9 +379,18 @@ button:not(:disabled):active{transform:scale(.97)}
     <div class="fld" id="xNoteWrap"><span class="lab">Artifact note</span><div class="note" id="xNote"></div></div>
     <div class="log" id="xLog"></div>
   </div>
-  <div class="df"><button class="btn" id="xClose">Cancel</button><button class="btn pri" id="xSave">Save</button></div>
+  <div class="df"><button class="btn danger" id="xDel" title="Remove this step from the plan">Delete step</button><button class="btn" id="xAddHere" title="Add another step to this deliverable">+ Step</button><span style="flex:1"></span><button class="btn" id="xClose">Cancel</button><button class="btn pri" id="xSave">Save</button></div>
 </aside>
 
+<div class="modal" id="addModal"><div class="box" style="max-width:480px">
+  <h2>Add a step</h2>
+  <div class="fld"><label for="aArt">Deliverable</label><select id="aArt"></select></div>
+  <div class="fld"><label for="aName">Step name</label><input type="text" id="aName" maxlength="80" placeholder="e.g. Peer review with architect"></div>
+  <div class="row2"><div class="fld"><label for="aStart">Start</label><input type="date" id="aStart"></div><div class="fld"><label for="aEnd">End</label><input type="date" id="aEnd"></div></div>
+  <div class="fld"><label for="aOwner">Owner</label><input type="text" id="aOwner"></div>
+  <div class="hint" id="aErr" style="color:#DA291C;font-weight:bold;min-height:18px"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"><button class="btn" id="aCancel">Cancel</button><button class="btn pri" id="aOk">Add step</button></div>
+</div></div>
 <div class="modal" id="nameModal"><div class="box" style="max-width:420px">
   <h2>Your name</h2>
   <p style="margin-top:0;color:#6B7785">The change log records who made each update.</p>
@@ -433,10 +449,10 @@ const esc = s => S(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;
 const STATUSES = ['Not started','In progress','Blocked','Done'];
 const cls = s => 's-' + (s||'Not started').split(' ')[0];
 const bcls = s => 'b-' + (s||'Not started').split(' ')[0];
-const EDIT = ['owner','status','target','actual','blocker','blockerSince','start'];
+const EDIT = ['owner','status','target','actual','blocker','blockerSince','start','deleted'];
 // Conflict-safe merge: each field group carries its own timestamp, so two people editing
 // different fields of one task never overwrite each other. Same field: the later edit wins.
-const GROUPS = {status: ['status','actual'], target: ['target'], start: ['start'], blocker: ['blocker','blockerSince'], owner: ['owner']};
+const GROUPS = {status: ['status','actual'], target: ['target'], start: ['start'], blocker: ['blocker','blockerSince'], owner: ['owner'], deleted: ['deleted']};
 const vals = t => Object.fromEntries(EDIT.map(k => [k, t[k] || '']));
 function stamp(t, bv, addDirty){
   const now = Date.now(); t.fu = t.fu || {}; let ch = false;
@@ -461,12 +477,15 @@ function mergeTask(t, ot){
 }
 function mergeFrom(other, markDirty){
   let n = 0; const names = new Set();
-  (other.tasks || []).forEach(ot => { const t = T().find(x => x.id === ot.id); if(!t){ if(markDirty !== 'load') return; DB.tasks.push(JSON.parse(JSON.stringify(ot))); return; }
+  const theirIds = new Set((other.tasks || []).map(x => x.id));
+  (other.tasks || []).forEach(ot => { const t = DB.tasks.find(x => x.id === ot.id);
+    if(!t){ insertTask(JSON.parse(JSON.stringify(ot))); n++; const l = (ot.log || [])[0]; if(l && l.by) names.add(l.by); return; }
     const r = mergeTask(t, ot);
     if(r.pulled){ n++; const l = (ot.log || [])[0]; if(l && l.by) names.add(l.by); }
     if(r.newer || (markDirty === true && r.pulled)) dirty.add(t.id);   // the other copy lacks our newer edit: push it again
     else if(markDirty !== true) dirty.delete(t.id);
   });
+  DB.tasks.forEach(t => { if(!theirIds.has(t.id)) dirty.add(t.id); });   // steps added here that the other copy lacks
   return {n, names: [...names]};
 }
 
@@ -509,7 +528,8 @@ if(local && local.baseline === FILE.baseline && local.db){
 }
 function mergeLog(a, b){ const m = new Map(); [...(Array.isArray(a)?a:[]), ...(Array.isArray(b)?b:[])].filter(l => l && typeof l.at === 'string').forEach(l => m.set(l.at + l.what, l)); return [...m.values()].sort((x, y) => y.at.localeCompare(x.at)).slice(0, 30); }
 function fmtTs(ms){ const d = new Date(ms); return `${d.getDate()} ${MON[d.getMonth()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
-function T(){ return DB.tasks; }
+function T(){ return DB.tasks.filter(t => !t.deleted); }
+function insertTask(t){ let i = -1; DB.tasks.forEach((x, j) => { if(x.artId === t.artId) i = j; }); i < 0 ? DB.tasks.push(t) : DB.tasks.splice(i + 1, 0, t); }
 const tgt = t => t.target || t.end;
 const barEnd = t => t.status === 'Done' && t.actual ? t.actual : tgt(t);
 const variance = t => t.actual ? wdDiff(t.end, t.actual) : (t.target ? wdDiff(t.end, t.target) : 0);
@@ -648,7 +668,7 @@ function renderPlan(){
     const s0 = every.map(t => t.start).sort()[0], e0 = every.map(barEnd).sort().slice(-1)[0];
     const late = every.some(t => t.status !== 'Done' && tgt(t) < viewDay);
     const col = collapsed.has(a.id);
-    h += `<div class="lc art${col?' collapsed':''}" data-tog="${esc(a.id)}"><span class="caret">▾</span><span class="id cid">${esc(a.id)}</span><span class="nm" title="${esc(a.id + ' · ' + a.name)}">${esc(a.name)}</span><span class="pill ${cls(roll)}">${roll === 'In progress' ? dn + '/' + n + ' done' : roll}</span></div>`;
+    h += `<div class="lc art${col?' collapsed':''}" data-tog="${esc(a.id)}"><span class="caret">▾</span><span class="id cid">${esc(a.id)}</span><span class="nm" title="${esc(a.id + ' · ' + a.name)}">${esc(a.name)}</span><button class="addst" data-add="${esc(a.id)}" title="Add a step to ${esc(a.id)}" aria-label="Add a step to ${esc(a.id)}">+</button><span class="pill ${cls(roll)}">${roll === 'In progress' ? dn + '/' + n + ' done' : roll}</span></div>`;
     h += `<div class="tl art">${back}${bar(s0, e0, bcls(roll), late ? 'over' : '', null, '', roll === 'Done' ? null : ['art', a.id])}</div>`;
     if(col) return;
     a.steps.forEach(t => {
@@ -656,7 +676,7 @@ function renderPlan(){
       const over = t.status !== 'Done' && tgt(t) < viewDay;
       const ghost = moved ? (() => { const a1 = idx(t.planStart || t.start), b1 = idx(t.end); return `<div class="ghost" style="left:${a1*CW+3}px;width:${(b1-a1+1)*CW-6}px"></div>`; })() : '';
       const v = variance(t), lb = (t.blocker && t.status !== 'Done' ? '⚠ ' : '') + (v ? (v > 0 ? '+' : '') + v + 'd' : '');
-      h += `<div class="lc step" data-open="${esc(t.id)}"><span></span><span class="id cid">${esc(t.id)}</span><span class="nm" title="${esc(t.id + ' · ' + t.owner)}">${esc(t.step)} <span class="id own">· ${esc(t.owner)}</span></span>${statusSel(t)}</div>`;
+      h += `<div class="lc step" data-open="${esc(t.id)}"><span></span><span class="id cid">${esc(t.id)}</span><span class="nm" title="${esc(t.id + ' · ' + t.owner)}">${esc(t.step)}${t.custom ? '<span class="new">added</span>' : ''} <span class="id own">· ${esc(t.owner)}</span></span>${statusSel(t)}</div>`;
       h += `<div class="tl">${back}${bar(t.start, barEnd(t), bcls(t.status), over ? 'over' : '', t.id, lb, t.status === 'Done' ? null : ['step', t.id])}${ghost}</div>`;
     });
   });
@@ -666,7 +686,7 @@ function renderPlan(){
   pl.innerHTML = h; pl.scrollTop = stp;
   if(scrolledDay !== viewDay){ scrolledDay = viewDay; pl.scrollTo({left: Math.max(0, idx(viewDay) * CW - 3 * CW), behavior: sl ? 'smooth' : 'auto'}); } else pl.scrollLeft = sl;
 }
-$('#plan').addEventListener('click', e => { const tg = e.target.closest('[data-tog]'); if(tg){ const id = tg.dataset.tog; collapsed.has(id) ? collapsed.delete(id) : collapsed.add(id); store.set(LS + '-col', JSON.stringify([...collapsed])); renderPlan(); } });
+$('#plan').addEventListener('click', e => { const ad = e.target.closest('[data-add]'); if(ad){ e.stopPropagation(); openAdd(ad.dataset.add); return; } const tg = e.target.closest('[data-tog]'); if(tg){ const id = tg.dataset.tog; collapsed.has(id) ? collapsed.delete(id) : collapsed.add(id); store.set(LS + '-col', JSON.stringify([...collapsed])); renderPlan(); } });
 try { collapsed = new Set(JSON.parse(store.get(LS + '-col') || '[]')); } catch(e){}
 $('#bExpand').onclick = () => { collapsed.clear(); store.set(LS + '-col', '[]'); renderPlan(); };
 $('#bCollapse').onclick = () => { T().forEach(t => collapsed.add(t.artId)); store.set(LS + '-col', JSON.stringify([...collapsed])); renderPlan(); };
@@ -762,6 +782,52 @@ $('#xCkForm').addEventListener('submit', e => {
   needName(() => { const it = {id: 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: txt.slice(0, 200), done: false, u: Date.now(), by: who()};
     (t.checklist = t.checklist || []).push(it); $('#xCkIn').value = ''; ckChange(t, `Added checklist item: ${it.text}`, it); $('#xCkIn').focus(); });
 });
+// ---------- add / delete steps ----------
+function artList(){ const m = new Map(); DB.tasks.forEach(t => { if(!m.has(t.artId)) m.set(t.artId, {id: t.artId, name: t.artifact, section: t.section, steps: []}); m.get(t.artId).steps.push(t); }); return [...m.values()]; }
+function openAdd(artId){
+  const arts = artList(), secs = [...new Set(arts.map(a => a.section))];
+  $('#aArt').innerHTML = secs.map(sc => `<optgroup label="${esc(sc)}">` + arts.filter(a => a.section === sc).map(a => `<option value="${esc(a.id)}"${a.id === artId ? ' selected' : ''}>${esc(a.id)} · ${esc(a.name)}</option>`).join('') + '</optgroup>').join('');
+  const d = isWd(pd(viewDay)) ? viewDay : fd(addWd(pd(viewDay), 1));
+  $('#aName').value = ''; $('#aStart').value = d; $('#aEnd').value = d; $('#aErr').textContent = ''; fillAddOwner();
+  $('#addModal').classList.add('on'); setTimeout(() => $('#aName').focus(), 40);
+}
+function fillAddOwner(){ const a = artList().find(x => x.id === $('#aArt').value); const live = a && a.steps.filter(t => !t.deleted); $('#aOwner').value = live && live[0] ? live[0].owner : ''; }
+$('#aArt').addEventListener('change', fillAddOwner);
+$('#aCancel').onclick = () => $('#addModal').classList.remove('on');
+$('#addModal').addEventListener('click', e => { if(e.target.id === 'addModal') $('#addModal').classList.remove('on'); });
+$('#aName').addEventListener('keydown', e => { if(e.key === 'Enter') $('#aOk').click(); });
+$('#bAddStep').onclick = () => openAdd('');
+$('#xAddHere').onclick = () => { const t = T().find(x => x.id === openId); if(!t) return; if(closeDrawer()) openAdd(t.artId); };
+$('#aOk').onclick = () => needName(() => {
+  const artId = $('#aArt').value, name = $('#aName').value.trim(), owner = $('#aOwner').value.trim();
+  let st = $('#aStart').value, en = $('#aEnd').value;
+  if(!artId) return $('#aErr').textContent = 'Pick a deliverable.';
+  if(!name){ $('#aErr').textContent = 'Give the step a name.'; return $('#aName').focus(); }
+  if(!st || !en) return $('#aErr').textContent = 'Set a start and an end date.';
+  if(!isWd(pd(st))) st = fd(addWd(pd(st), 1)); en = prevWd(en);
+  if(en < st) return $('#aErr').textContent = 'The end date is before the start date.';
+  const ref = DB.tasks.find(t => t.artId === artId); let id;
+  do { id = artId + '-' + Math.random().toString(36).slice(2, 5).toUpperCase(); } while(DB.tasks.some(t => t.id === id));
+  const now = Date.now();
+  const t = {id, section: ref.section, artId, artifact: ref.artifact, step: name, owner, status: 'Not started', start: st, planStart: st, end: en,
+    target: '', actual: '', blocker: '', blockerSince: '', note: ref.note || '', log: [], checklist: [], custom: true, deleted: false,
+    updatedAt: now, fu: Object.fromEntries(Object.keys(GROUPS).map(g => [g, now]))};
+  logChange(t, `Added step "${name}" to ${artId}`);
+  insertTask(t); dirty.add(id); collapsed.delete(artId); persist(); fillOwners(); render();
+  $('#addModal').classList.remove('on');
+  undo = () => { const bv = vals(t); t.deleted = true; logChange(t, 'Undo: step removed'); stamp(t, bv); persist(); render(); toast(`Removed ${name}`, false, 'info'); };
+  toast(`Added "${name}" to ${artId}`, true, 'success');
+});
+$('#xDel').onclick = () => {
+  const t = T().find(x => x.id === openId); if(!t) return;
+  if(!confirm(`Delete the step "${t.step}" (${t.id}) from ${t.artId}? Its checklist and history go with it. You can undo straight after.`)) return;
+  needName(() => {
+    const bv = vals(t); t.deleted = true; logChange(t, 'Deleted step'); stamp(t, bv); persist();
+    closeDrawer(true); render();
+    undo = () => { const b2 = vals(t); t.deleted = false; logChange(t, 'Restored step'); stamp(t, b2); persist(); render(); toast(`Restored ${t.step}`, false, 'success'); };
+    toast(`Deleted "${t.step}" from ${t.artId}`, true, 'info');
+  });
+};
 const formState = () => JSON.stringify([draft && draft.status, $('#xStartIn').value, $('#xTarget').value, $('#xActual').value, $('#xBlocker').value.trim(), $('#xOwner').value.trim()]);
 function hintT(){
   const t = T().find(x => x.id === openId); if(!t) return;
@@ -785,7 +851,7 @@ function closeDrawer(force){
 }
 $('#xClose').onclick = () => closeDrawer(); $('#scrim').onclick = () => closeDrawer();
 document.addEventListener('keydown', e => {
-  if(e.key === 'Escape'){ if($('#nameModal').classList.contains('on')){ if(!$('#nameCancel').classList.contains('hidden')) $('#nameCancel').click(); return; } if($('#help').classList.contains('on')){ $('#help').classList.remove('on'); return; } $('#menu').classList.remove('on'); closeDrawer(); }
+  if(e.key === 'Escape'){ if($('#nameModal').classList.contains('on')){ if(!$('#nameCancel').classList.contains('hidden')) $('#nameCancel').click(); return; } if($('#help').classList.contains('on')){ $('#help').classList.remove('on'); return; } if($('#addModal').classList.contains('on')){ $('#addModal').classList.remove('on'); return; } $('#menu').classList.remove('on'); closeDrawer(); }
   if(e.key === 'Tab' && openId){ const f = [...$('#drawer').querySelectorAll('button,input,textarea,select')].filter(x => x.offsetParent !== null);
     if(!f.length) return; const first = f[0], last = f[f.length - 1];
     if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); } else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
