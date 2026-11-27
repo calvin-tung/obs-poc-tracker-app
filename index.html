@@ -97,7 +97,7 @@ select.pill{appearance:none;-webkit-appearance:none;cursor:pointer;text-align:ce
 .gh.now{box-shadow:inset 0 -4px 0 #fff}
 .gh small{display:block;font-weight:normal;opacity:.8}
 .lc{position:sticky;left:0;background:#fff;z-index:4;border-bottom:1px solid var(--line);border-right:1px solid var(--line);display:grid;grid-template-columns:22px 110px 1fr 112px;align-items:center;gap:6px;padding:0 10px;height:34px;font-size:13px}
-.lc.art{background:#F4F6F8;font-weight:bold;height:38px;cursor:pointer;grid-template-columns:22px 110px 1fr 26px 112px}
+.lc.art{background:#F4F6F8;font-weight:bold;height:38px;cursor:pointer;grid-template-columns:20px 16px 104px 1fr 26px 112px}
 .addst{width:24px;height:24px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--navy);font-weight:bold;cursor:pointer;line-height:1;padding:0;opacity:.0}
 .lc.art:hover .addst,.addst:focus-visible{opacity:1}
 @media (hover:none){.addst{opacity:1}}
@@ -190,7 +190,8 @@ body.ghm .fileonly,body.ghm [data-act=connect],body.ghm #bSave{display:none!impo
  .banner{margin:10px 14px 0}
  .kpis{grid-template-columns:repeat(4,1fr)}
  .kpis .kpi.prog{grid-column:1/-1}
- .lc{grid-template-columns:18px 1fr 104px}
+ .lc{grid-template-columns:20px 1fr 104px}
+ .lc.art{grid-template-columns:20px 16px 1fr 26px 104px}
  .lc .id.cid{display:none}
 }
 @media (max-width:760px){
@@ -226,7 +227,9 @@ body.ghm .fileonly,body.ghm [data-act=connect],body.ghm #bSave{display:none!impo
  .task .r{grid-column:2;text-align:left}
  select.pill{min-height:36px;padding:8px 10px}
  .plan{max-height:calc(100vh - 250px)}
- .lc{grid-template-columns:18px 1fr 96px;padding:0 6px;font-size:12px;height:44px}
+ .lc{grid-template-columns:22px 1fr 96px;padding:0 6px;font-size:12px;height:44px}
+ .lc.art{grid-template-columns:22px 14px 1fr 26px 96px}
+ .rh{width:22px;height:34px}
  .lc.art{height:44px}
  .tl,.tl.art{height:44px}
  .gbar{top:13px}.tl.art .gbar{top:16px}.ghost{top:33px}
@@ -303,6 +306,28 @@ button:not(:disabled):active{transform:scale(.97)}
 .cki .ed{border:0;background:none;color:var(--mut);cursor:pointer;font-size:13px;padding:0 4px;transition:opacity 150ms}
 @media (hover:hover){.cki .ed{opacity:0}.cki:hover .ed,.cki:focus-within .ed{opacity:1}}
 .cke{flex:1;border:1px solid var(--prog);border-radius:5px;padding:4px 7px;font-size:13px;min-height:28px}
+/* ---------- reorder grips (vertical) vs bar drag (horizontal) ---------- */
+.rh{width:20px;height:26px;border:0;border-radius:5px;background:none;color:#A3ADB8;font-size:15px;line-height:1;cursor:grab;padding:0;touch-action:none;display:inline-flex;align-items:center;justify-content:center}
+@media (hover:hover){.rh:hover{background:var(--nsBg);color:var(--navy)}}
+.rh:focus-visible{outline:2px solid var(--prog);outline-offset:1px;color:var(--navy)}
+.lc.step .rh{opacity:.55}.lc.step:hover .rh,.lc.step .rh:focus-visible{opacity:1}
+@media (hover:none){.lc.step .rh{opacity:1}}
+body.rdragging,body.rdragging *{cursor:grabbing!important}
+.rlift{position:relative;z-index:8!important;box-shadow:0 8px 22px rgba(20,28,36,.18);background:#fff!important;transition:box-shadow 150ms var(--ease-out)}
+.lc.rlift{outline:2px solid var(--prog);outline-offset:-2px}
+#pLine{position:absolute;left:0;height:3px;background:var(--prog);border-radius:2px;display:none;pointer-events:none;z-index:9}
+#pLine span{position:sticky;left:12px;display:inline-block;transform:translateY(-50%);background:var(--prog);color:#fff;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:10px;white-space:nowrap;margin-top:1px}
+@keyframes rflash{from{background:#E7F0FA}to{background:inherit}}
+.rflash{animation:rflash 900ms var(--ease-out)}
+/* ---------- "+" add menu ---------- */
+.pmenu{position:fixed;z-index:60;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(20,28,36,.16);padding:6px;min-width:260px;display:none}
+.pmenu.on{display:block}.pmenu.pop{animation:pop 160ms var(--ease-out)}
+.pmenu button{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;border:0;background:none;padding:10px 12px;border-radius:7px;cursor:pointer;color:var(--ink)}
+.pmenu button:focus-visible,.pmenu button:hover{background:var(--bg);outline:none}
+.pmenu .mi{width:22px;height:22px;border-radius:6px;background:var(--navy);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto;margin-top:1px}
+.pmenu b{display:block;font-size:14px}.pmenu small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
+#bAdd .cv{font-size:10px;margin-left:2px;opacity:.8}
+@media (max-width:760px){.pmenu button{min-height:48px}}
 /* ---------- toaster (Sonner-style stack) ---------- */
 #toaster{position:fixed;right:24px;bottom:24px;width:360px;max-width:calc(100vw - 32px);z-index:90;pointer-events:none}
 .tst{position:absolute;right:0;bottom:0;width:100%;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 20px rgba(20,28,36,.12);padding:13px 14px;display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4;pointer-events:auto;touch-action:none;user-select:none;
@@ -379,8 +404,8 @@ button:not(:disabled):active{transform:scale(.97)}
       <span><i style="border-top:2px dashed #6B7785;height:0;border-radius:0"></i>Original plan (when moved)</span>
       <span><i style="border-left:2px dashed #212F3D;height:12px;width:0;border-radius:0"></i>Real today</span>
       <span style="flex:1"></span>
-      <span class="dghint">Drag a bar to move it, drag its edge to change duration</span>
-      <button class="lbtn pri" id="bAddStep">+ Add step</button><button class="lbtn" id="bExpand">Expand all</button><button class="lbtn" id="bCollapse">Collapse all</button>
+      <span class="dghint"><b>⠿</b> drag up/down to reorder · drag a bar sideways to reschedule, its edge to resize</span>
+      <button class="lbtn pri" id="bAdd" aria-haspopup="menu" aria-expanded="false">+ Add <span class="cv">▾</span></button><button class="lbtn" id="bExpand">Expand all</button><button class="lbtn" id="bCollapse">Collapse all</button>
     </div>
     <div class="plan" id="plan"></div>
   </section>
@@ -415,9 +440,28 @@ button:not(:disabled):active{transform:scale(.97)}
     <div class="fld" id="xNoteWrap"><span class="lab">Artifact note</span><div class="note" id="xNote"></div></div>
     <div class="log" id="xLog"></div>
   </div>
-  <div class="df"><button class="btn danger" id="xDel" title="Remove this step from the plan">Delete step</button><button class="btn" id="xAddHere" title="Add another step to this deliverable">+ Step</button><span style="flex:1"></span><button class="btn" id="xClose">Cancel</button><button class="btn pri" id="xSave">Save</button></div>
+  <div class="df"><button class="btn danger" id="xDel" title="Remove this step from the plan">Delete step</button><button class="btn" id="xAddHere" aria-haspopup="menu" title="Add a step or a deliverable">+ Add</button><span style="flex:1"></span><button class="btn" id="xClose">Cancel</button><button class="btn pri" id="xSave">Save</button></div>
 </aside>
 
+<div class="pmenu" id="addMenu" role="menu" aria-label="Add">
+  <button role="menuitem" data-a="step"><span class="mi">＋</span><span><b>Add step</b><small id="amStep">To any deliverable</small></span></button>
+  <button role="menuitem" data-a="art"><span class="mi">▦</span><span><b>Add deliverable</b><small id="amArt">New deliverable with standard steps</small></span></button>
+</div>
+<div class="modal" id="artModal"><div class="box" style="max-width:520px">
+  <h2>Add a deliverable</h2>
+  <div class="row2"><div class="fld"><label for="dSec">Section</label><select id="dSec"></select></div>
+    <div class="fld"><label for="dCode">Short ID</label><input type="text" id="dCode" maxlength="8" placeholder="e.g. M12"><div class="hint" id="dIdHint"></div></div></div>
+  <div class="fld"><label for="dName">Deliverable name</label><input type="text" id="dName" maxlength="80" placeholder="e.g. Interface control document"></div>
+  <div class="fld"><label for="dTpl">Steps</label><select id="dTpl">
+    <option value="doc">Document: Format confirmation → Draft → Internal review → SME review → Update → Confirmation</option>
+    <option value="code">Build: Draft → Internal review → SME review → Update → Confirmation</option>
+    <option value="tool">Tool run: Prepare input → Run → Output check → Hand over</option>
+    <option value="one">Single step</option></select><div class="hint" id="dTplHint"></div></div>
+  <div class="row2"><div class="fld"><label for="dStart">Start</label><input type="date" id="dStart"></div><div class="fld"><label for="dOwner">Owner</label><input type="text" id="dOwner"></div></div>
+  <div class="fld"><label for="dPos">Position</label><select id="dPos"></select></div>
+  <div class="hint" id="dErr" style="color:#DA291C;font-weight:bold;min-height:18px"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"><button class="btn" id="dCancel">Cancel</button><button class="btn pri" id="dOk">Add deliverable</button></div>
+</div></div>
 <div class="modal" id="addModal"><div class="box" style="max-width:480px">
   <h2>Add a step</h2>
   <div class="fld"><label for="aArt">Deliverable</label><select id="aArt"></select></div>
@@ -485,11 +529,11 @@ const esc = s => S(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;
 const STATUSES = ['Not started','In progress','Blocked','Done'];
 const cls = s => 's-' + (s||'Not started').split(' ')[0];
 const bcls = s => 'b-' + (s||'Not started').split(' ')[0];
-const EDIT = ['owner','status','target','actual','blocker','blockerSince','start','deleted','notes','notesBy'];
+const EDIT = ['owner','status','target','actual','blocker','blockerSince','start','deleted','notes','notesBy','so'];
 // Conflict-safe merge: each field group carries its own timestamp, so two people editing
 // different fields of one task never overwrite each other. Same field: the later edit wins.
-const GROUPS = {status: ['status','actual'], target: ['target'], start: ['start'], blocker: ['blocker','blockerSince'], owner: ['owner'], deleted: ['deleted'], notes: ['notes','notesBy']};
-const vals = t => Object.fromEntries(EDIT.map(k => [k, t[k] || '']));
+const GROUPS = {status: ['status','actual'], target: ['target'], start: ['start'], blocker: ['blocker','blockerSince'], owner: ['owner'], deleted: ['deleted'], notes: ['notes','notesBy'], so: ['so']};
+const vals = t => Object.fromEntries(EDIT.map(k => [k, t[k] == null ? '' : t[k]]));
 function stamp(t, bv, addDirty){
   const now = Date.now(); t.fu = t.fu || {}; let ch = false;
   Object.entries(GROUPS).forEach(([g, ks]) => { if(ks.some(k => String(bv[k] || '') !== String(t[k] || ''))){ t.fu[g] = now; ch = true; } });
@@ -524,6 +568,13 @@ function mergeFrom(other, markDirty){
     else if(markDirty !== true) dirty.delete(t.id);
   });
   DB.tasks.forEach(t => { if(!theirIds.has(t.id)) dirty.add(t.id); });   // steps added here that the other copy lacks
+  // deliverable order: one entry per artifact {o, u}, newer u wins
+  const ao = other.artOrder || {}; DB.artOrder = DB.artOrder || {}; let mineNewer = false, gotOrder = false;
+  Object.entries(ao).forEach(([k, v]) => { const m = DB.artOrder[k]; if(!m || (v.u || 0) > (m.u || 0)){ DB.artOrder[k] = {o: v.o, u: v.u}; gotOrder = true; } else if((m.u || 0) > (v.u || 0)) mineNewer = true; });
+  Object.keys(DB.artOrder).forEach(k => { if(!ao[k]) mineNewer = true; });
+  if(mineNewer) dirty.add('__order'); else if(markDirty !== true) dirty.delete('__order');
+  if(gotOrder){ n++; names.add('a colleague'); }
+  sortTasks();
   return {n, names: [...names]};
 }
 
@@ -567,6 +618,14 @@ if(local && local.baseline === FILE.baseline && local.db){
 function mergeLog(a, b){ const m = new Map(); [...(Array.isArray(a)?a:[]), ...(Array.isArray(b)?b:[])].filter(l => l && typeof l.at === 'string').forEach(l => m.set(l.at + l.what, l)); return [...m.values()].sort((x, y) => y.at.localeCompare(x.at)).slice(0, 30); }
 function fmtTs(ms){ const d = new Date(ms); return `${d.getDate()} ${MON[d.getMonth()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
 function T(){ return DB.tasks.filter(t => !t.deleted); }
+// Keep DB.tasks in display order: section, then deliverable order (artOrder), then step order (so)
+function sortTasks(){
+  const secs = [...new Set(DB.tasks.map(t => t.section))], first = new Map(), pos = new Map();
+  DB.tasks.forEach((t, i) => { pos.set(t, i); if(!first.has(t.artId)) first.set(t.artId, i); });
+  const ao = DB.artOrder || {}, ak = id => ao[id] && ao[id].o != null ? ao[id].o : first.get(id);
+  const sk = t => t.so != null && t.so !== '' ? +t.so : pos.get(t);
+  DB.tasks.sort((a, b) => secs.indexOf(a.section) - secs.indexOf(b.section) || ak(a.artId) - ak(b.artId) || (a.artId < b.artId ? -1 : a.artId > b.artId ? 1 : 0) || sk(a) - sk(b));
+}
 function insertTask(t){ let i = -1; DB.tasks.forEach((x, j) => { if(x.artId === t.artId) i = j; }); i < 0 ? DB.tasks.push(t) : DB.tasks.splice(i + 1, 0, t); }
 const tgt = t => t.target || t.end;
 const barEnd = t => t.status === 'Done' && t.actual ? t.actual : tgt(t);
@@ -711,7 +770,7 @@ function renderPlan(){
     (days.includes(viewDay) ? `<div class="selcol" style="left:${idx(viewDay)*CW}px;width:${CW}px"></div>` : '') +
     (realToday !== viewDay && days.includes(realToday) ? `<div class="nowline" style="left:${idx(realToday)*CW + CW/2}px"></div>` : '');
   PD = {days, CW, idx};
-  const bar = (s, e, c, extra, id, lbl, dg) => { const a = idx(s), b = idx(e); return `<div class="gbar ${c} ${extra||''}${dg ? ' dg' : ''}" ${id?`data-open="${esc(id)}"`:''} ${dg ? `data-dg="${esc(dg[1])}" data-kind="${dg[0]}"` : ''} style="left:${a*CW+3}px;width:${Math.max(1,(b-a+1))*CW-6}px">${dg && dg[0] === 'step' ? '<i class="hl"></i><i class="hr"></i>' : ''}${lbl?`<span class="lbl">${lbl}</span>`:''}</div>`; };
+  const bar = (s, e, c, extra, id, lbl, dg) => { const a = idx(s), b = idx(e); return `<div class="gbar ${c} ${extra||''}${dg ? ' dg' : ''}" ${id?`data-open="${esc(id)}"`:''} ${dg ? `data-dg="${esc(dg[1])}" data-kind="${dg[0]}" title="${dg[0] === 'step' ? 'Drag sideways to reschedule · drag an end to change duration' : 'Drag sideways to move all open steps'}"` : ''} style="left:${a*CW+3}px;width:${Math.max(1,(b-a+1))*CW-6}px">${dg && dg[0] === 'step' ? '<i class="hl"></i><i class="hr"></i>' : ''}${lbl?`<span class="lbl">${lbl}</span>`:''}</div>`; };
   const arts = [], am = {};
   all.forEach(t => { if(!am[t.artId]){ am[t.artId] = {id: t.artId, name: t.artifact, section: t.section, steps: []}; arts.push(am[t.artId]); } am[t.artId].steps.push(t); });
   let cur = null;
@@ -722,7 +781,7 @@ function renderPlan(){
     const s0 = every.map(t => t.start).sort()[0], e0 = every.map(barEnd).sort().slice(-1)[0];
     const late = every.some(t => t.status !== 'Done' && tgt(t) < viewDay);
     const col = collapsed.has(a.id);
-    h += `<div class="lc art${col?' collapsed':''}" data-tog="${esc(a.id)}"><span class="caret">▾</span><span class="id cid">${esc(a.id)}</span><span class="nm" title="${esc(a.id + ' · ' + a.name)}">${esc(a.name)}</span><button class="addst" data-add="${esc(a.id)}" title="Add a step to ${esc(a.id)}" aria-label="Add a step to ${esc(a.id)}">+</button><span class="pill ${cls(roll)}">${roll === 'In progress' ? dn + '/' + n + ' done' : roll}</span></div>`;
+    h += `<div class="lc art${col?' collapsed':''}" data-tog="${esc(a.id)}" data-art="${esc(a.id)}" data-sec="${esc(a.section)}"><button class="rh" data-mv="art" data-id="${esc(a.id)}" title="Drag up or down to reorder this deliverable (or focus and press ↑ ↓)" aria-label="Reorder ${esc(a.id)}">⠿</button><span class="caret">▾</span><span class="id cid">${esc(a.id)}</span><span class="nm" title="${esc(a.id + ' · ' + a.name)}">${esc(a.name)}</span><button class="addst" data-add="${esc(a.id)}" aria-haspopup="menu" title="Add a step or a deliverable" aria-label="Add near ${esc(a.id)}">+</button><span class="pill ${cls(roll)}">${roll === 'In progress' ? dn + '/' + n + ' done' : roll}</span></div>`;
     h += `<div class="tl art">${back}${bar(s0, e0, bcls(roll), late ? 'over' : '', null, '', roll === 'Done' ? null : ['art', a.id])}</div>`;
     if(col) return;
     a.steps.forEach(t => {
@@ -730,7 +789,7 @@ function renderPlan(){
       const over = t.status !== 'Done' && tgt(t) < viewDay;
       const ghost = moved ? (() => { const a1 = idx(t.planStart || t.start), b1 = idx(t.end); return `<div class="ghost" style="left:${a1*CW+3}px;width:${(b1-a1+1)*CW-6}px"></div>`; })() : '';
       const v = variance(t), lb = (t.blocker && t.status !== 'Done' ? '⚠ ' : '') + (v ? (v > 0 ? '+' : '') + v + 'd' : '');
-      h += `<div class="lc step" data-open="${esc(t.id)}"><span></span><span class="id cid">${esc(t.id)}</span><span class="nm" title="${esc(t.id + ' · ' + t.owner)}">${esc(t.step)}${t.custom ? '<span class="new">added</span>' : ''} <span class="id own">· ${esc(t.owner)}</span></span>${statusSel(t)}</div>`;
+      h += `<div class="lc step" data-open="${esc(t.id)}" data-art="${esc(t.artId)}"><button class="rh" data-mv="step" data-id="${esc(t.id)}" title="Drag up or down to reorder this step within ${esc(t.artId)} (or focus and press ↑ ↓)" aria-label="Reorder step ${esc(t.id)}">⠿</button><span class="id cid">${esc(t.id)}</span><span class="nm" title="${esc(t.id + ' · ' + t.owner)}">${esc(t.step)}${t.custom ? '<span class="new">added</span>' : ''} <span class="id own">· ${esc(t.owner)}</span></span>${statusSel(t)}</div>`;
       h += `<div class="tl">${back}${bar(t.start, barEnd(t), bcls(t.status), over ? 'over' : '', t.id, lb, t.status === 'Done' ? null : ['step', t.id])}${ghost}</div>`;
     });
   });
@@ -740,7 +799,7 @@ function renderPlan(){
   pl.innerHTML = h; pl.scrollTop = stp;
   if(scrolledDay !== viewDay){ scrolledDay = viewDay; pl.scrollTo({left: Math.max(0, idx(viewDay) * CW - 3 * CW), behavior: sl ? 'smooth' : 'auto'}); } else pl.scrollLeft = sl;
 }
-$('#plan').addEventListener('click', e => { const ad = e.target.closest('[data-add]'); if(ad){ e.stopPropagation(); openAdd(ad.dataset.add); return; } const tg = e.target.closest('[data-tog]'); if(tg){ const id = tg.dataset.tog; collapsed.has(id) ? collapsed.delete(id) : collapsed.add(id); store.set(LS + '-col', JSON.stringify([...collapsed])); renderPlan(); } });
+$('#plan').addEventListener('click', e => { if(e.target.closest('.rh') || rdSuppress) return; const ad = e.target.closest('[data-add]'); if(ad){ e.stopPropagation(); openAddMenu(ad, ad.dataset.add); return; } const tg = e.target.closest('[data-tog]'); if(tg){ const id = tg.dataset.tog; collapsed.has(id) ? collapsed.delete(id) : collapsed.add(id); store.set(LS + '-col', JSON.stringify([...collapsed])); renderPlan(); } });
 try { collapsed = new Set(JSON.parse(store.get(LS + '-col') || '[]')); } catch(e){}
 $('#bExpand').onclick = () => { collapsed.clear(); store.set(LS + '-col', '[]'); renderPlan(); };
 $('#bCollapse').onclick = () => { T().forEach(t => collapsed.add(t.artId)); store.set(LS + '-col', JSON.stringify([...collapsed])); renderPlan(); };
@@ -778,7 +837,7 @@ document.addEventListener('click', e => {
   if(e.target.closest('[data-clear]')){ $('#bClear').click(); return; }
   const k = e.target.closest('.kpi[data-go]'); if(k){ selectPanel(k.dataset.go); if(window.innerWidth >= 760){ const el = document.getElementById(k.dataset.go); el && el.scrollIntoView({behavior:'smooth', block:'nearest'}); } return; }
   if(e.target.closest('select')) return;
-  if(suppressClick) return;
+  if(suppressClick || rdSuppress || e.target.closest('.rh')) return;
   const o = e.target.closest('[data-open]'); if(o) openDrawer(o.dataset.open);
 });
 document.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.matches('.task[data-open]')) openDrawer(e.target.dataset.open); });
@@ -916,8 +975,8 @@ $('#aArt').addEventListener('change', fillAddOwner);
 $('#aCancel').onclick = () => $('#addModal').classList.remove('on');
 $('#addModal').addEventListener('click', e => { if(e.target.id === 'addModal') $('#addModal').classList.remove('on'); });
 $('#aName').addEventListener('keydown', e => { if(e.key === 'Enter') $('#aOk').click(); });
-$('#bAddStep').onclick = () => openAdd('');
-$('#xAddHere').onclick = () => { const t = T().find(x => x.id === openId); if(!t) return; if(closeDrawer()) openAdd(t.artId); };
+
+$('#xAddHere').onclick = e => { const t = T().find(x => x.id === openId); if(t) openAddMenu(e.currentTarget, t.artId, true); };
 $('#aOk').onclick = () => needName(() => {
   const artId = $('#aArt').value, name = $('#aName').value.trim(), owner = $('#aOwner').value.trim();
   let st = $('#aStart').value, en = $('#aEnd').value;
@@ -965,6 +1024,85 @@ $('#xNotes').addEventListener('keydown', e => { if((e.ctrlKey || e.metaKey) && e
 $('#xNotes').addEventListener('paste', e => { e.preventDefault(); const cd = e.clipboardData; const h = cd.getData('text/html'); document.execCommand('insertHTML', false, h ? cleanHTML(h) : textToHTML(cd.getData('text/plain'))); });
 $('#xNotes').addEventListener('click', e => { const a = e.target.closest('a[href]'); if(a && (e.ctrlKey || e.metaKey)){ e.preventDefault(); window.open(a.href, '_blank', 'noopener'); } });
 try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch(x){}
+// ---------- add a deliverable ----------
+const TPL = {doc: [['F', 'Format confirmation', 1], ['D', 'Draft', 3], ['IR', 'Internal review', 1], ['SR', 'SME review', 1], ['U', 'Update', 1], ['C', 'Confirmation', 1]],
+  code: [['D', 'Draft', 5], ['IR', 'Internal review', 1], ['SR', 'SME review', 1], ['U', 'Update', 1], ['C', 'Confirmation', 1]],
+  tool: [['P', 'Prepare input', 1], ['R', 'Run', 1], ['OC', 'Output check', 1], ['H', 'Hand over', 1]], one: [['S', '', 1]]};
+const SUFFIX = {'Interest': '-IP', 'TT SI': '-SI'};
+function artSecs(){ return [...new Set(DB.tasks.map(t => t.section))]; }
+function newArtId(){ const c = $('#dCode').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ''); return c ? c + (SUFFIX[$('#dSec').value] || '') : ''; }
+function tplPlan(start){ const key = $('#dTpl').value; let d = start, out = [];
+  TPL[key].forEach(([c, n, len]) => { if(!isWd(pd(d))) d = fd(addWd(pd(d), 1)); const e = len > 1 ? fd(addWd(pd(d), len - 1)) : d; out.push([c, n, d, e]); d = fd(addWd(pd(e), 1)); }); return out; }
+function artHint(){
+  const id = newArtId(), taken = id && DB.tasks.some(t => t.artId === id);
+  $('#dIdHint').innerHTML = id ? (taken ? `<span style="color:#DA291C">${esc(id)} is already used</span>` : `ID: <b>${esc(id)}</b>`) : '';
+  const st = $('#dStart').value; if(st){ const pl = tplPlan(st); $('#dTplHint').textContent = `${pl.length} step${pl.length > 1 ? 's' : ''}, ${short(pl[0][2])} to ${short(pl[pl.length - 1][3])}. Change dates afterwards by dragging the bars.`; }
+  const sec = $('#dSec').value, arts = [...new Set(T().filter(t => t.section === sec).map(t => t.artId))];
+  const cur = $('#dPos').value; $('#dPos').innerHTML = '<option value="">At the end of ' + esc(sec) + '</option>' + arts.map(a => `<option value="${esc(a)}"${a === cur ? ' selected' : ''}>Above ${esc(a)} · ${esc((T().find(t => t.artId === a) || {}).artifact || '')}</option>`).join('');
+}
+function openAddArt(opts = {}){
+  const want = opts.sec || sec || 'Interest';
+  $('#dSec').innerHTML = artSecs().map(x => `<option${x === want ? ' selected' : ''}>${esc(x)}</option>`).join('');
+  $('#dCode').value = ''; $('#dName').value = ''; $('#dTpl').value = 'doc'; $('#dOwner').value = who(); $('#dErr').textContent = '';
+  $('#dStart').value = isWd(pd(viewDay)) ? viewDay : fd(addWd(pd(viewDay), 1)); $('#dPos').value = ''; artHint(); if(opts.before !== undefined) $('#dPos').value = opts.before;
+  $('#artModal').classList.add('on'); setTimeout(() => $('#dCode').focus(), 40);
+}
+['#dSec', '#dTpl', '#dStart'].forEach(x => $(x).addEventListener('change', artHint)); $('#dCode').addEventListener('input', artHint);
+$('#bAdd').onclick = e => { e.stopPropagation(); openAddMenu(e.currentTarget, ''); };
+// one "+" menu for both options; context = the deliverable it was opened from
+let amCtx = null;
+function openAddMenu(btn, artId, fromDrawer){
+  const m = $('#addMenu'); if(m.classList.contains('on') && amCtx && amCtx.btn === btn){ closeAddMenu(); return; }
+  amCtx = {btn, artId, fromDrawer};
+  $('#amStep').textContent = artId ? 'To ' + artId : 'To any deliverable';
+  $('#amArt').textContent = artId ? 'New deliverable below ' + artId : 'New deliverable with standard steps';
+  m.classList.add('on'); btn.setAttribute('aria-expanded', 'true');
+  const r = btn.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+  let x = r.right - w, y = r.bottom + 6, below = true;
+  if(x < 8) x = Math.min(r.left, window.innerWidth - w - 8);
+  if(y + h > window.innerHeight - 8){ y = r.top - h - 6; below = false; }
+  m.style.left = x + 'px'; m.style.top = y + 'px'; m.style.transformOrigin = (below ? 'top ' : 'bottom ') + (x + w / 2 < r.left + r.width / 2 ? 'left' : 'right');
+  m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop');
+  setTimeout(() => m.querySelector('button').focus(), 20);
+}
+function closeAddMenu(){ const m = $('#addMenu'); m.classList.remove('on'); if(amCtx && amCtx.btn) amCtx.btn.setAttribute('aria-expanded', 'false'); }
+$('#addMenu').addEventListener('click', e => {
+  const b = e.target.closest('[data-a]'); if(!b) return; const c = amCtx || {}; closeAddMenu();
+  if(c.fromDrawer && !closeDrawer()) return;
+  if(b.dataset.a === 'step') openAdd(c.artId || '');
+  else { let opts = {}; if(c.artId){ const t0 = DB.tasks.find(t => t.artId === c.artId), ids = [...new Set(T().filter(t => t.section === t0.section).map(t => t.artId))], k = ids.indexOf(c.artId); opts = {sec: t0.section, before: ids[k + 1] || ''}; } openAddArt(opts); }
+});
+$('#addMenu').addEventListener('keydown', e => { const bs = [...$('#addMenu').querySelectorAll('button')], k = bs.indexOf(document.activeElement);
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); bs[(k + (e.key === 'ArrowDown' ? 1 : bs.length - 1)) % bs.length].focus(); }
+  if(e.key === 'Escape'){ e.stopPropagation(); closeAddMenu(); amCtx && amCtx.btn && amCtx.btn.focus(); } if(e.key === 'Tab') closeAddMenu(); });
+document.addEventListener('click', e => { if($('#addMenu').classList.contains('on') && !e.target.closest('#addMenu') && !(amCtx && e.target.closest('button') === amCtx.btn)) closeAddMenu(); }, true);
+window.addEventListener('resize', closeAddMenu); $('#plan').addEventListener('scroll', closeAddMenu, {passive: true}); $('#dCancel').onclick = () => $('#artModal').classList.remove('on');
+$('#artModal').addEventListener('click', e => { if(e.target.id === 'artModal') $('#artModal').classList.remove('on'); });
+$('#dOk').onclick = () => needName(() => {
+  const sc = $('#dSec').value, id = newArtId(), name = $('#dName').value.trim(), owner = $('#dOwner').value.trim(), st = $('#dStart').value;
+  if(!id) return ($('#dErr').textContent = 'Give the deliverable a short ID, for example M12.', $('#dCode').focus());
+  if(DB.tasks.some(t => t.artId === id)) return ($('#dErr').textContent = id + ' is already used. Pick another ID.', $('#dCode').focus());
+  if(!name) return ($('#dErr').textContent = 'Give the deliverable a name.', $('#dName').focus());
+  if(!st) return ($('#dErr').textContent = 'Set a start date.');
+  const now = Date.now(), made = [];
+  tplPlan(st).forEach(([c, n, a, e], k) => {
+    const t = {id: `${id}-${c}`, section: sc, artId: id, artifact: name, step: n || name, owner, status: 'Not started', start: a, planStart: a, end: e,
+      target: '', actual: '', blocker: '', blockerSince: '', note: '', log: [], checklist: [], custom: true, deleted: false, so: k + 1,
+      updatedAt: now, fu: Object.fromEntries(Object.keys(GROUPS).map(g => [g, now]))};
+    logChange(t, `Created with deliverable ${id}`); DB.tasks.push(t); dirty.add(t.id); made.push(t);
+  });
+  // position: renumber the section's deliverable order with the new one in place
+  const ids = [...new Set(T().filter(t => t.section === sc && t.artId !== id).map(t => t.artId))], before = $('#dPos').value;
+  let at = before ? ids.indexOf(before) : ids.length; if(at < 0) at = ids.length; ids.splice(at, 0, id);
+  DB.artOrder = DB.artOrder || {}; ids.forEach((x, k) => DB.artOrder[x] = {o: k, u: now}); dirty.add('__order');
+  sortTasks(); collapsed.delete(id); persist(); fillOwners(); render();
+  $('#artModal').classList.remove('on');
+  if(view !== 'plan') document.querySelector('nav button[data-v=plan]').click();
+  flashRow(`.lc.art[data-art="${CSS.escape(id)}"]`);
+  requestAnimationFrame(() => { const r = document.querySelector(`.lc.art[data-art="${CSS.escape(id)}"]`); r && r.scrollIntoView({block: 'center', behavior: 'smooth'}); });
+  undo = () => { made.forEach(t => { const bv = vals(t); t.deleted = true; logChange(t, 'Undo: deliverable removed'); stamp(t, bv); }); persist(); render(); toast(`Removed ${id}`, false, 'info'); };
+  toast(`Added ${id} · ${name} with ${made.length} step${made.length > 1 ? 's' : ''}`, true, 'success');
+});
 const formState = () => JSON.stringify([draft && draft.status, cleanHTML($('#xNotes').innerHTML), $('#xStartIn').value, $('#xTarget').value, $('#xActual').value, $('#xBlocker').value.trim(), $('#xOwner').value.trim()]);
 function hintT(){
   const t = T().find(x => x.id === openId); if(!t) return;
@@ -988,7 +1126,7 @@ function closeDrawer(force){
 }
 $('#xClose').onclick = () => closeDrawer(); $('#scrim').onclick = () => closeDrawer();
 document.addEventListener('keydown', e => {
-  if(e.key === 'Escape'){ if($('#nameModal').classList.contains('on')){ if(!$('#nameCancel').classList.contains('hidden')) $('#nameCancel').click(); return; } if($('#help').classList.contains('on')){ $('#help').classList.remove('on'); return; } if($('#addModal').classList.contains('on')){ $('#addModal').classList.remove('on'); return; } $('#menu').classList.remove('on'); closeDrawer(); }
+  if(e.key === 'Escape'){ if($('#nameModal').classList.contains('on')){ if(!$('#nameCancel').classList.contains('hidden')) $('#nameCancel').click(); return; } if($('#help').classList.contains('on')){ $('#help').classList.remove('on'); return; } if($('#addModal').classList.contains('on')){ $('#addModal').classList.remove('on'); return; } if($('#artModal').classList.contains('on')){ $('#artModal').classList.remove('on'); return; } $('#menu').classList.remove('on'); closeDrawer(); }
   if(e.key === 'Tab' && openId){ const f = [...$('#drawer').querySelectorAll('button,input,textarea,select')].filter(x => x.offsetParent !== null);
     if(!f.length) return; const first = f[0], last = f[f.length - 1];
     if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); } else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
@@ -1310,7 +1448,81 @@ window.addEventListener('pointerup', () => endDrag(false));
 window.addEventListener('pointercancel', () => endDrag(true));
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && drag) endDrag(true); });
 
+// ---------- reorder deliverables and steps (Overall plan, vertical only, via the ⠿ grip) ----------
+let rd = null, rdSuppress = false;
+function rdBlock(row){ const els = [row, row.nextElementSibling]; if(row.classList.contains('art')){ let n = row.nextElementSibling.nextElementSibling; while(n && !n.matches('.lc.art, .lc.secrow')){ els.push(n); n = n.nextElementSibling; } } return els; }
+function rdCands(row){ const pl = $('#plan'); return row.classList.contains('art') ? [...pl.querySelectorAll(`.lc.art[data-sec="${CSS.escape(row.dataset.sec)}"]`)] : [...pl.querySelectorAll(`.lc.step[data-art="${CSS.escape(row.dataset.art)}"]`)]; }
+function reorderArt(id, beforeId){
+  const t0 = T().find(t => t.artId === id), sec = t0.section, ids = [...new Set(T().filter(t => t.section === sec).map(t => t.artId))];
+  const prev = ids.slice(), rest = ids.filter(x => x !== id); let at = beforeId ? rest.indexOf(beforeId) : rest.length; if(at < 0) at = rest.length;
+  const order = [...rest.slice(0, at), id, ...rest.slice(at)]; if(order.join() === prev.join()) return false;
+  const now = Date.now(); DB.artOrder = DB.artOrder || {}; order.forEach((x, k) => DB.artOrder[x] = {o: k, u: now});
+  dirty.add('__order'); sortTasks(); persist(); render();
+  undo = () => { const u2 = Date.now(); prev.forEach((x, k) => DB.artOrder[x] = {o: k, u: u2}); dirty.add('__order'); sortTasks(); persist(); render(); toast('Order restored', false, 'info'); };
+  const k = order.indexOf(id); toast(`Moved ${id} ${k === 0 ? 'to the top of ' + sec : 'below ' + order[k - 1]}`, true, 'success'); flashRow(`.lc.art[data-art="${CSS.escape(id)}"]`); return true;
+}
+function reorderStep(id, beforeId){
+  const t = T().find(x => x.id === id), steps = T().filter(x => x.artId === t.artId), prev = steps.map(x => x.id);
+  const rest = steps.filter(x => x.id !== id); let at = beforeId ? rest.findIndex(x => x.id === beforeId) : rest.length; if(at < 0) at = rest.length;
+  const order = [...rest.slice(0, at), t, ...rest.slice(at)]; if(order.map(x => x.id).join() === prev.join()) return false;
+  const apply = list => list.forEach((x, k) => { if(x.so !== k + 1){ const bv = vals(x); x.so = k + 1; stamp(x, bv); } });   // 1-based: 0 would read as empty
+  apply(order); logChange(t, 'Moved step to position ' + (order.indexOf(t) + 1)); sortTasks(); persist(); render();
+  undo = () => { apply(prev.map(pid => T().find(x => x.id === pid)).filter(Boolean)); logChange(t, 'Undo: step order restored'); sortTasks(); persist(); render(); toast('Step order restored', false, 'info'); };
+  toast(`Moved "${t.step}" to position ${order.indexOf(t) + 1} in ${t.artId}`, true, 'success'); flashRow(`.lc.step[data-open="${CSS.escape(id)}"]`); return true;
+}
+function flashRow(sel){ requestAnimationFrame(() => { const r = document.querySelector(sel); if(r){ r.classList.add('rflash'); r.nextElementSibling && r.nextElementSibling.classList.add('rflash'); } }); }
+$('#plan').addEventListener('pointerdown', e => {
+  const h = e.target.closest('.rh'); if(!h || e.button > 0) return; e.preventDefault(); e.stopPropagation();
+  const row = h.closest('.lc'); rd = {h, row, kind: h.dataset.mv, id: h.dataset.id, y0: e.clientY, pid: e.pointerId, started: false, target: undefined, touch: e.pointerType !== 'mouse'};
+  try { h.setPointerCapture(e.pointerId); } catch(x){}
+  if(rd.touch) rd.timer = setTimeout(() => rd && !rd.started && rdBegin(), 180);
+});
+function rdBegin(){
+  rd.started = true; rd.els = rdBlock(rd.row); rd.cands = rdCands(rd.row).filter(c => c !== rd.row);
+  rd.els.forEach(x => x.classList.add('rlift')); document.body.classList.add('nosel', 'rdragging');
+  let ln = $('#pLine'); if(!ln){ ln = document.createElement('div'); ln.id = 'pLine'; ln.innerHTML = '<span></span>'; $('#plan').appendChild(ln); }
+  if(navigator.vibrate && rd.touch) navigator.vibrate(12);
+}
+window.addEventListener('pointermove', e => {
+  if(!rd) return; const dy = e.clientY - rd.y0;
+  if(!rd.started){ if(Math.abs(dy) < 4) return; if(rd.touch){ clearTimeout(rd.timer); rd = null; return; } rdBegin(); }
+  e.preventDefault(); rd.els.forEach(x => x.style.transform = `translateY(${dy}px)`);
+  let before = null; for(const c of rd.cands){ const r = c.getBoundingClientRect(); if(e.clientY < r.top + r.height / 2){ before = c; break; } }
+  rd.target = before; const pl = $('#plan'), pr = pl.getBoundingClientRect(), ln = $('#pLine');
+  const last = rd.cands[rd.cands.length - 1]; let y;
+  if(before) y = before.getBoundingClientRect().top; else if(last){ const blk = rdBlock(last); y = blk[blk.length - 1].getBoundingClientRect().bottom; } else y = rd.row.getBoundingClientRect().top;
+  ln.style.top = (y - pr.top + pl.scrollTop - 1) + 'px'; ln.style.width = pl.scrollWidth + 'px'; ln.style.display = 'block';
+  const name = before ? (rd.kind === 'art' ? before.dataset.art : (T().find(x => x.id === before.dataset.open) || {}).step) : null;
+  ln.firstChild.textContent = rd.kind === 'art' ? (name ? 'Move above ' + name : 'Move to the end of the section') : (name ? 'Move above "' + name + '"' : 'Move to the end of ' + rd.row.dataset.art);
+  const pl2 = $('#plan'); if(e.clientY < pr.top + 40) pl2.scrollTop -= 12; else if(e.clientY > pr.bottom - 40) pl2.scrollTop += 12;
+}, {passive: false});
+function rdEnd(cancel){
+  if(!rd) return; clearTimeout(rd.timer); const d = rd; rd = null;
+  if(!d.started){ return; }
+  rdSuppress = true; setTimeout(() => rdSuppress = false, 80);
+  document.body.classList.remove('nosel', 'rdragging'); const ln = $('#pLine'); if(ln) ln.style.display = 'none';
+  d.els.forEach(x => { x.style.transform = ''; x.classList.remove('rlift'); });
+  if(cancel || d.target === undefined) return;
+  const beforeId = d.target ? (d.kind === 'art' ? d.target.dataset.art : d.target.dataset.open) : null;
+  needName(() => d.kind === 'art' ? reorderArt(d.id, beforeId) : reorderStep(d.id, beforeId));
+}
+window.addEventListener('pointerup', () => rdEnd(false));
+window.addEventListener('pointercancel', () => rdEnd(true));
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && rd) rdEnd(true); });
+$('#plan').addEventListener('keydown', e => {
+  const h = e.target.closest('.rh'); if(!h || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return; e.preventDefault();
+  const up = e.key === 'ArrowUp', id = h.dataset.id;
+  needName(() => {
+    if(h.dataset.mv === 'art'){ const t0 = T().find(t => t.artId === id), ids = [...new Set(T().filter(t => t.section === t0.section).map(t => t.artId))], k = ids.indexOf(id);
+      if(up ? k > 0 : k < ids.length - 1) reorderArt(id, up ? ids[k - 1] : (ids[k + 2] || null)); }
+    else { const t = T().find(x => x.id === id), st = T().filter(x => x.artId === t.artId).map(x => x.id), k = st.indexOf(id);
+      if(up ? k > 0 : k < st.length - 1) reorderStep(id, up ? st[k - 1] : (st[k + 2] || null)); }
+    requestAnimationFrame(() => { const nh = document.querySelector(`.rh[data-id="${CSS.escape(id)}"]`); nh && nh.focus(); });
+  });
+});
+
 document.body.classList.add('intro'); setTimeout(() => document.body.classList.remove('intro'), 900);
+sortTasks();
 fillOwners(); renderMeta(); render();
 store.get(LS); // probe
 if(!storageOK) showBanner('nostore', 'Autosave is off in this browser. Click Save tracker before you close the page, or your edits are lost.');
