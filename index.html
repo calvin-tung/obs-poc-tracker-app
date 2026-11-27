@@ -1,0 +1,1412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OBS PoC Tracker</title>
+<style>
+:root{--red:#DA291C;--navy:#212F3D;--ink:#2B3A48;--mut:#6B7785;--line:#E3E7EC;--bg:#F5F7F9;--card:#fff;
+--done:#2E7D32;--doneBg:#E6F4E8;--prog:#1F5FA8;--progBg:#E7F0FA;--blk:#DA291C;--blkBg:#FDE9E7;--nsBg:#F1F3F6;}
+*{box-sizing:border-box}
+html{height:100%;overflow-x:hidden}
+body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg);font-size:14px}
+button,select,input,textarea{font-family:inherit;font-size:14px}
+.top{position:sticky;top:0;z-index:30}
+header{background:var(--red);color:#fff;padding:10px 22px;display:flex;align-items:center;gap:10px}
+header h1{font-size:20px;margin:0;font-weight:bold;white-space:nowrap}
+header .sp{flex:1}
+.hbtn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:6px;padding:8px 12px;cursor:pointer;white-space:nowrap;min-height:36px}
+.hbtn:hover{background:rgba(255,255,255,.26)}
+.hbtn.solid{background:#fff;color:var(--red);font-weight:bold;border-color:#fff}
+.hbtn .cnt{display:inline-block;background:var(--red);color:#fff;border-radius:9px;padding:1px 7px;font-size:12px;margin-left:6px}
+.sync{border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.12);color:#fff;border-radius:16px;padding:7px 12px;cursor:pointer;white-space:nowrap;font-size:13px;min-height:36px}
+.sync.ok{background:#fff;color:#2E7D32;border-color:#fff;font-weight:bold}
+.sync.warn{background:#FFF6E0;color:#8A5A00;border-color:#FFF6E0;font-weight:bold}
+.sync.err{background:#FDE9E7;color:#DA291C;border-color:#FDE9E7;font-weight:bold}
+.sync.busy{opacity:.85}
+.sync .sm,#bSave .sm{display:none}
+.who{background:rgba(255,255,255,.95);border:0;border-radius:6px;padding:8px 10px;width:150px;color:var(--ink);min-height:36px}
+#bMore{display:none}
+.menu{position:absolute;right:14px;top:54px;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:6px;display:none;z-index:35;min-width:220px}
+.menu.on{display:block}
+.menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:12px 14px;border-radius:6px;cursor:pointer;color:var(--ink)}
+.menu button:hover{background:var(--bg)}
+nav{background:var(--navy);display:flex;align-items:center;gap:4px;padding:0 22px}
+nav button{background:none;border:0;color:#C9D3DD;padding:12px 16px;cursor:pointer;font-weight:bold;border-bottom:3px solid transparent}
+nav button.on{color:#fff;border-bottom-color:var(--red)}
+nav .meta{margin-left:auto;font-size:12px;color:#C9D3DD;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 22px 4px}
+.bar select,.bar input[type=search]{border:1px solid var(--line);border-radius:6px;padding:8px 9px;background:#fff;min-height:36px}
+.bar input[type=search]{width:220px}
+.chips{display:flex;gap:6px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:18px;padding:8px 14px;cursor:pointer;color:var(--ink);min-height:36px}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.clear{border:0;background:none;color:var(--prog);cursor:pointer;padding:6px}
+.daynav{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:4px 6px}
+.daynav button{border:0;background:var(--bg);border-radius:6px;padding:8px 12px;cursor:pointer;min-width:38px;min-height:34px}
+.daynav b{min-width:150px;text-align:center}
+main{padding:8px 22px 40px}
+.banner{margin:12px 22px 0;padding:10px 14px;border-radius:8px;background:#FFF6E0;border:1px solid #F0D58A;display:none;gap:10px;align-items:center;flex-wrap:wrap}
+.banner.show{display:flex}
+.banner.warn{background:#FDE9E7;border-color:#F3B4AE}
+.banner button{border:1px solid #D9B860;background:#fff;border-radius:6px;padding:6px 10px;cursor:pointer}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:10px 0 16px}
+.kpi{background:var(--card);border-radius:10px;padding:14px 16px;border:1px solid var(--line);cursor:pointer;transition:transform .12s, box-shadow .12s;text-align:left}
+.kpi:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(33,47,61,.08)}
+.kpi .n{font-size:30px;font-weight:bold;color:var(--navy)}
+.kpi .l{font-size:13px;color:var(--mut);margin-top:2px}
+.kpi.alert .n{color:var(--red)}
+.kpi.sel{border-color:var(--navy);box-shadow:inset 0 -3px 0 var(--navy)}
+.kpi .pbar{height:6px;background:var(--nsBg);border-radius:3px;margin-top:8px;overflow:hidden}
+.kpi .pbar i{display:block;height:100%;background:var(--done)}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.panel h3{margin:0;padding:12px 14px;font-size:15px;color:var(--navy);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.panel h3 .c{background:var(--bg);border-radius:10px;padding:2px 9px;font-size:12px;color:var(--mut)}
+.panel.red h3{color:var(--red)}
+.list{max-height:62vh;overflow:auto}
+.empty{padding:18px 14px;color:var(--mut);font-size:13px}
+.task{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .1s}
+.task:hover{background:#FAFBFC}
+.task.isdone{opacity:.6}
+.task .t1{font-weight:bold;font-size:14px}
+.task .t1 .tid{color:#8A96A3;font-weight:normal;font-size:12px}
+.task .t2{font-size:12px;color:var(--mut);margin-top:2px}
+.task .r{text-align:right;font-size:12px;color:var(--mut);white-space:nowrap}
+.blk{color:var(--red);font-size:12px;margin-top:3px}
+.od{color:var(--red);font-weight:bold}
+.pill{display:inline-block;border-radius:12px;padding:5px 10px;font-size:12px;font-weight:bold;white-space:nowrap;border:0}
+select.pill{appearance:none;-webkit-appearance:none;cursor:pointer;text-align:center;min-height:28px}
+.s-Done{background:var(--doneBg);color:var(--done)}
+.s-In{background:var(--progBg);color:var(--prog)}
+.s-Blocked{background:var(--blkBg);color:var(--blk)}
+.s-Not{background:var(--nsBg);color:#7A8591;font-weight:normal}
+.var{display:inline-block;border-radius:4px;padding:1px 6px;font-size:11px;font-weight:bold;margin-left:4px}
+.var.late{background:var(--blkBg);color:var(--red)}
+.var.early{background:var(--doneBg);color:var(--done)}
+.sec{font-size:11px;font-weight:bold;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;padding:8px 14px 4px;background:#FAFBFC;border-bottom:1px solid var(--line)}
+.ptabs{display:none}
+.fbtn{display:none;border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer;color:var(--ink)}
+/* plan */
+.plan{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:auto;max-height:calc(100vh - 220px);position:relative}
+.grid{display:grid;min-width:max-content}
+.gh{position:sticky;top:0;background:var(--navy);color:#fff;font-size:12px;font-weight:bold;z-index:5;height:40px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(255,255,255,.08)}
+.gh.left{justify-content:flex-start;padding-left:12px;left:0;z-index:7}
+.gh.sel{background:var(--red)}
+.gh.now{box-shadow:inset 0 -4px 0 #fff}
+.gh small{display:block;font-weight:normal;opacity:.8}
+.lc{position:sticky;left:0;background:#fff;z-index:4;border-bottom:1px solid var(--line);border-right:1px solid var(--line);display:grid;grid-template-columns:22px 110px 1fr 112px;align-items:center;gap:6px;padding:0 10px;height:34px;font-size:13px}
+.lc.art{background:#F4F6F8;font-weight:bold;height:38px;cursor:pointer}
+.lc.secrow{background:#fff;color:var(--red);font-weight:bold;font-size:14px;grid-template-columns:1fr;height:36px;border-bottom:2px solid var(--red)}
+.lc .id{font-size:11px;color:var(--mut);font-weight:normal}
+.lc .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc.step .nm{padding-left:8px;color:var(--ink)}
+.lc.step{cursor:pointer}
+.caret{display:inline-block;transition:transform .15s;color:var(--mut)}
+.collapsed .caret{transform:rotate(-90deg)}
+.tl{position:relative;border-bottom:1px solid var(--line);height:34px}
+.tl.art{height:38px;background:#FBFCFD}
+.tl.secrow{height:36px;border-bottom:2px solid var(--red)}
+.dayline{position:absolute;top:0;bottom:0;border-left:1px solid #F0F2F5}
+.selcol{position:absolute;top:0;bottom:0;background:rgba(218,41,28,.06);border-left:2px solid var(--red)}
+.nowline{position:absolute;top:0;bottom:0;border-left:2px dashed var(--navy);opacity:.5}
+.gbar{position:absolute;top:8px;height:16px;border-radius:4px;cursor:pointer;transition:filter .1s;z-index:1}
+.gbar:hover{filter:brightness(.93)}
+.tl.art .gbar{top:13px;height:12px;border-radius:6px;cursor:default}
+.b-Done{background:#4CA35A}.b-In{background:var(--prog)}.b-Blocked{background:var(--red)}.b-Not{background:#AEB8C3}
+.gbar.over{outline:2px solid var(--red);outline-offset:1px}
+.ghost{position:absolute;top:27px;height:0;border-top:2px dashed #6B7785;pointer-events:none;z-index:2}
+.gbar.dg{cursor:grab;touch-action:none}
+.gbar.dragging{cursor:grabbing;filter:brightness(.9);box-shadow:0 2px 8px rgba(0,0,0,.25);z-index:6;transition:none}
+.gbar .hl,.gbar .hr{position:absolute;top:-2px;bottom:-2px;width:10px;cursor:ew-resize}
+.gbar .hl{left:-4px}.gbar .hr{right:-4px}
+.gbar.dg:hover .hl,.gbar.dg:hover .hr{background:rgba(255,255,255,.35);border-radius:3px}
+.dtip{position:fixed;z-index:70;background:var(--navy);color:#fff;font-size:12px;padding:6px 9px;border-radius:6px;pointer-events:none;white-space:nowrap;display:none}
+.dghint{font-size:12px;color:var(--mut)}
+body.nosel{user-select:none;-webkit-user-select:none}
+.gbar .lbl{position:absolute;left:100%;margin-left:6px;top:0;font-size:11px;color:var(--mut);white-space:nowrap;line-height:16px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mut);padding:8px 2px;align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:18px;height:10px;border-radius:3px}
+.lbtn{border:1px solid var(--line);background:#fff;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:13px;color:var(--ink)}
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(20,28,36,.32);opacity:0;pointer-events:none;transition:opacity .18s;z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:440px;max-width:100%;background:#fff;z-index:41;transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.12);visibility:hidden}
+.drawer.on{transform:none;visibility:visible}
+.dh{background:var(--navy);color:#fff;padding:16px 18px}
+.dh .id{font-size:12px;opacity:.8}
+.dh h2{margin:4px 0 2px;font-size:18px}
+.dh .sub{font-size:13px;opacity:.85}
+.db{padding:16px 18px;overflow:auto;flex:1}
+.fld{margin-bottom:16px}
+.fld > label,.fld > .lab{display:block;font-size:12px;font-weight:bold;color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.seg button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:10px 4px;cursor:pointer;font-size:13px}
+.seg button.on.s-Done{background:var(--done);color:#fff;border-color:var(--done)}
+.seg button.on.s-In{background:var(--prog);color:#fff;border-color:var(--prog)}
+.seg button.on.s-Blocked{background:var(--red);color:#fff;border-color:var(--red)}
+.seg button.on.s-Not{background:#56616D;color:#fff;border-color:#56616D}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ro{background:var(--bg);border-radius:6px;padding:8px 10px;font-size:13px}
+.drawer input[type=date],.drawer input[type=text],.drawer textarea,.modal input[type=text]{width:100%;border:1px solid var(--line);border-radius:6px;padding:9px 10px;min-height:38px}
+.drawer textarea{min-height:80px;resize:vertical}
+.hint{font-size:12px;color:var(--mut);margin-top:5px}
+.note{font-size:13px;background:#FFF6E0;border-radius:6px;padding:8px 10px}
+.log{font-size:12px;color:var(--mut);border-top:1px solid var(--line);padding-top:10px}
+.log div{padding:3px 0}
+.df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
+.btn{border:1px solid var(--line);background:#fff;border-radius:6px;padding:9px 16px;cursor:pointer;min-height:38px}
+.btn.pri{background:var(--red);color:#fff;border-color:var(--red);font-weight:bold}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--navy);color:#fff;padding:10px 16px;border-radius:8px;opacity:0;transition:all .2s;z-index:60;font-size:13px;display:flex;gap:12px;align-items:center;pointer-events:none;max-width:92vw}
+.toast.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
+.toast button{background:none;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:5px;padding:4px 10px;cursor:pointer}
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50;background:rgba(20,28,36,.38)}
+.modal.on{display:flex}
+.modal .box{background:#fff;border-radius:12px;max-width:620px;width:92%;padding:20px 24px;max-height:85vh;overflow:auto}
+.modal h2{margin:0 0 10px;color:var(--navy);font-size:18px}
+.modal ol{padding-left:20px;line-height:1.6}
+.hidden{display:none!important}
+.ghonly{display:none}
+body.ghm .ghonly{display:block}
+body.ghm .fileonly,body.ghm [data-act=connect],body.ghm #bSave{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:1100px){.cols{grid-template-columns:1fr}.list{max-height:none}}
+@media (max-width:900px){
+ header{padding:10px 14px}
+ .hbtn.opt,.who{display:none}
+ .sync{padding:7px 10px;font-size:12px}
+ .sync .lg{display:none}.sync .sm{display:inline}.sync.nofsa{display:none}
+ #bMore{display:inline-block}
+ nav{padding:0 14px}
+ .bar{padding:12px 14px 2px}
+ main{padding:6px 14px 30px}
+ .banner{margin:10px 14px 0}
+ .kpis{grid-template-columns:repeat(4,1fr)}
+ .kpis .kpi.prog{grid-column:1/-1}
+ .lc{grid-template-columns:18px 1fr 104px}
+ .lc .id.cid{display:none}
+}
+@media (max-width:760px){
+ header h1{font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+ header{gap:6px}
+ .hbtn{padding:6px 10px}
+ .dghint{display:none}
+ #bSave .lg{display:none}#bSave .sm{display:inline}
+ header .sp{display:none}
+ nav .meta{display:none}
+ .chips{width:100%;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+ .chip{flex:0 0 auto}
+ .bar select{flex:1 1 40%;min-width:0}
+ .bar input[type=search]{width:100%;flex:1 1 100%}
+ .bar > .gap{display:none}
+ .daynav{width:100%;justify-content:space-between}
+ .daynav b{min-width:0;flex:1}
+ .daynav button{min-width:44px;min-height:40px}
+ .kpis{grid-template-columns:1fr;gap:8px}
+ .kpis .kpi[data-go]{display:none}
+ .kpi{padding:10px 12px}.kpi .n{font-size:22px}
+ .fbtn{display:block;min-height:44px;flex:0 0 auto}
+ .bar .chips,.bar select,.bar input[type=search]{display:none}
+ .bar.fopen .chips{display:flex}.bar.fopen select,.bar.fopen input[type=search]{display:block}
+ .daynav{flex:1;width:auto}
+ .hbtn,.chip,.bar select,.bar input[type=search],select.pill,.seg button,.btn,.menu button,.lbtn,.drawer input[type=date],.drawer input[type=text],.modal input[type=text]{min-height:44px}
+ .toast button{min-height:40px;padding:8px 14px}
+ .ptabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+ .ptabs button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px 6px;font-weight:bold;cursor:pointer;color:var(--ink);min-height:44px}
+ .ptabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+ .cols .panel{display:none}
+ .cols .panel.on{display:block}
+ .task{grid-template-columns:auto 1fr;padding:12px}
+ .task .r{grid-column:2;text-align:left}
+ select.pill{min-height:36px;padding:8px 10px}
+ .plan{max-height:calc(100vh - 250px)}
+ .lc{grid-template-columns:18px 1fr 96px;padding:0 6px;font-size:12px;height:44px}
+ .lc.art{height:44px}
+ .tl,.tl.art{height:44px}
+ .gbar{top:13px}.tl.art .gbar{top:16px}.ghost{top:33px}
+ .lc .nm{white-space:normal;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+ .lc .id.cid,.lc .own{display:none}
+ .lc .pill{font-size:11px;padding:4px 6px}
+ .drawer{width:100%}
+ .seg{grid-template-columns:repeat(2,1fr)}
+ .row2{grid-template-columns:1fr}
+}
+@media (hover:none){.gbar:hover,.kpi:hover{filter:none;transform:none;box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="top">
+<header>
+  <h1>OBS PoC Tracker</h1>
+  <div class="sp"></div>
+  <input class="who" id="who" placeholder="Your name" aria-label="Your name" title="Used in the change log">
+  <button class="hbtn opt" id="bImport" title="Load a CSV or JSON file you edited">Upload data</button>
+  <button class="hbtn opt" id="bExport" title="Download task data as CSV (opens in Excel)">Download data</button>
+  <button class="sync" id="sync" title="Live sync with the tracker file in your OneDrive folder"></button>
+  <button class="hbtn solid" id="bSave" title="Download this tracker with your changes inside; upload it to OneDrive">Save tracker</button>
+  <button class="hbtn opt" id="bHelp" aria-label="Help">?</button>
+  <button class="hbtn" id="bMore" aria-label="More actions">☰</button>
+  <input type="file" id="file" accept=".csv,.json,.html,.htm" class="hidden">
+</header>
+<div class="menu" id="menu">
+  <div id="menuMeta" style="font-size:12px;color:#6B7785;padding:8px 14px 6px;border-bottom:1px solid #E3E7EC;margin-bottom:4px"></div>
+  <button data-act="connect">Connect OneDrive file (live sync)</button>
+  <button data-act="name">Set your name</button>
+  <button data-act="import">Upload data (CSV or JSON)</button>
+  <button data-act="export">Download data (CSV)</button>
+  <button data-act="help">How sharing works</button>
+</div>
+<nav>
+  <button data-v="today" class="on">Today</button>
+  <button data-v="plan">Overall plan</button>
+  <span class="meta" id="meta"></span>
+</nav>
+</div>
+<div class="banner" id="banner"><span id="bannerTxt"></span><span style="flex:1"></span><span id="bannerBtns"></span></div>
+<div class="bar">
+  <button class="fbtn" id="bFilt" aria-expanded="false">Filters</button>
+  <div class="chips" id="chips"></div>
+  <select id="fOwner" aria-label="Owner"><option value="">All owners</option></select>
+  <select id="fStatus" aria-label="Status"><option value="">All statuses</option><option>Not started</option><option>In progress</option><option>Blocked</option><option>Done</option></select>
+  <input type="search" id="fText" placeholder="Search ID, artifact, step" aria-label="Search">
+  <button class="clear hidden" id="bClear">Clear filters</button>
+  <span class="gap" style="flex:1"></span>
+  <div class="daynav" id="dayNav"><button id="dPrev" aria-label="Previous working day">◀</button><b id="dLbl"></b><button id="dNext" aria-label="Next working day">▶</button><button id="dToday">Today</button></div>
+</div>
+<main>
+  <section id="vToday">
+    <div class="kpis" id="kpis"></div>
+    <div class="ptabs" id="ptabs"><button data-p="pDue" class="on">Due <span id="tDue"></span></button><button data-p="pOver">Overdue <span id="tOver"></span></button><button data-p="pDone">Completed <span id="tDone"></span></button></div>
+    <div class="cols">
+      <div class="panel on" id="pDue"><h3>Due on this day <span class="c" id="cDue"></span></h3><div class="list" id="lDue"></div></div>
+      <div class="panel red" id="pOver"><h3>Overdue or blocked <span class="c" id="cOver"></span></h3><div class="list" id="lOver"></div></div>
+      <div class="panel" id="pDone"><h3>Completed <span class="c" id="cDone"></span></h3><div class="list" id="lDone"></div></div>
+    </div>
+  </section>
+  <section id="vPlan" class="hidden">
+    <div class="legend">
+      <span><i class="b-Not"></i>Not started</span><span><i class="b-In"></i>In progress</span>
+      <span><i class="b-Done"></i>Done</span><span><i class="b-Blocked"></i>Blocked</span>
+      <span><i style="outline:2px solid #DA291C;background:#AEB8C3"></i>Overdue</span>
+      <span><i style="border-top:2px dashed #6B7785;height:0;border-radius:0"></i>Original plan (when moved)</span>
+      <span><i style="border-left:2px dashed #212F3D;height:12px;width:0;border-radius:0"></i>Real today</span>
+      <span style="flex:1"></span>
+      <span class="dghint">Drag a bar to move it, drag its edge to change duration</span>
+      <button class="lbtn" id="bExpand">Expand all</button><button class="lbtn" id="bCollapse">Collapse all</button>
+    </div>
+    <div class="plan" id="plan"></div>
+  </section>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="xStep">
+  <div class="dh"><div class="id" id="xId"></div><h2 id="xStep"></h2><div class="sub" id="xArt"></div></div>
+  <div class="db">
+    <div class="fld"><span class="lab">Status</span><div class="seg" id="xSeg"></div></div>
+    <div class="fld"><span class="lab">Planned dates</span><div class="row2"><div class="ro" id="xStart"></div><div class="ro" id="xEnd"></div></div></div>
+    <div class="fld"><label for="xStartIn">Start date</label><input type="date" id="xStartIn"></div>
+    <div class="fld"><label for="xTarget">Target date</label><input type="date" id="xTarget"><div class="hint" id="xTargetHint"></div></div>
+    <div class="fld"><label for="xActual">Actual done date</label><input type="date" id="xActual"><div class="hint" id="xActualHint"></div></div>
+    <div class="fld"><label for="xBlocker">Blocker</label><textarea id="xBlocker" placeholder="What stops this step? Who can clear it?"></textarea><div class="hint" id="xBlkHint"></div></div>
+    <div class="fld"><label for="xOwner">Owner</label><input type="text" id="xOwner"></div>
+    <div class="fld" id="xNoteWrap"><span class="lab">Artifact note</span><div class="note" id="xNote"></div></div>
+    <div class="log" id="xLog"></div>
+  </div>
+  <div class="df"><button class="btn" id="xClose">Cancel</button><button class="btn pri" id="xSave">Save</button></div>
+</aside>
+
+<div class="modal" id="nameModal"><div class="box" style="max-width:420px">
+  <h2>Your name</h2>
+  <p style="margin-top:0;color:#6B7785">The change log records who made each update.</p>
+  <input type="text" id="nameIn" placeholder="e.g. Calvin Tung" aria-label="Your name">
+  <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end"><button class="btn hidden" id="nameCancel">Cancel</button><button class="btn pri" id="nameOk">Continue</button></div>
+</div></div>
+
+<div class="modal" id="help"><div class="box">
+  <div class="ghonly">
+    <h2>How this tracker works</h2>
+    <ol>
+      <li>Everyone opens the same web address and signs in with the team password.</li>
+      <li>Every change saves to the shared tracker within a few seconds. Colleagues' changes appear on your screen within 20 seconds.</li>
+      <li>If two people change the same task, both changes are kept when they touch different fields. For the same field, the later change wins.</li>
+      <li>Tick <b>Remember me</b> to skip the password on your own laptop for 30 days. Use <b>Sign out</b> in the menu on shared machines.</li>
+      <li><b>Download data</b> gives a CSV for Excel. <b>Upload data</b> loads it back; rows match on ID.</li>
+    </ol>
+    <p>Data is encrypted before it leaves your browser. Sign-ins are recorded with name, time and IP address for the tracker admin.</p>
+  </div>
+  <div class="fileonly">
+  <h2>How to share updates through OneDrive</h2>
+  <p><b>Best: live sync (Chrome or Edge, OneDrive folder synced to your laptop).</b></p>
+  <ol>
+    <li>In Finder or File Explorer, open the OneDrive folder and double-click the tracker so it opens in Chrome or Edge.</li>
+    <li>Click <b>Connect OneDrive file</b> in the red bar and pick that same tracker file. Allow editing when asked. You do this once per laptop.</li>
+    <li>From then on every change writes into the file within a few seconds, and OneDrive uploads it. Every 20 seconds the tracker checks the file for colleagues' changes and pulls them in.</li>
+    <li>Next time you open the tracker, click the yellow <b>Resume sync</b> button once. The browser needs one click before it can write again.</li>
+  </ol>
+  <p><b>Without live sync</b> (Safari, Firefox, or opened from the OneDrive website):</p>
+  <ol>
+    <li>Download the tracker from OneDrive and open it in Chrome or Edge on a laptop. Phones can view it but are not reliable for saving.</li>
+    <li>Click any task to update status, target date, actual done date or blocker. Edits autosave in this browser.</li>
+    <li>Click <b>Save tracker</b>. The button shows how many changes are not yet saved into a file.</li>
+    <li>In OneDrive, upload the new file and choose <b>Replace</b>. If your browser named it <i>OBS-PoC-Tracker (1).html</i>, rename it to <i>OBS-PoC-Tracker.html</i> first, or OneDrive keeps two files.</li>
+  </ol>
+  <p><b>OneDrive conflict copy?</b> If two laptops write at the same moment, OneDrive may keep a second file with a computer name added. Click <b>Upload data</b> and choose that file: the tracker merges it task by task. Then delete the copy.</p>
+  <p><b>Two editors?</b> If someone uploaded a newer file while you had unsaved edits, the tracker merges them task by task when you open the new file. The most recent change to each task wins, and a banner tells you what happened.</p>
+  <p><b>Bulk edits in Excel:</b> <b>Download data</b>, edit Status, Owner, Target date, Actual done or Blocker, then <b>Upload data</b>. Rows match on ID. Dates outside the PoC window are skipped and listed.</p>
+  <p><b>Always start from the latest file.</b> Before you edit, open the newest tracker from OneDrive, not an old copy in Downloads. If you open a file that lacks changes you saved earlier, the tracker puts them back and tells you.</p>
+  <p>Late and early count working days against the original planned end date. Saves are ordered by each laptop's clock, so keep clocks on automatic time.</p>
+  </div>
+  <div style="text-align:right"><button class="btn pri" id="helpClose">Got it</button></div>
+</div></div>
+<div class="dtip" id="dtip"></div>
+<div class="toast" id="toast" role="status"><span id="toastTxt"></span><button id="toastUndo" class="hidden">Undo</button></div>
+
+<script>window.__GH_MODE = {appOwner: "calvin-tung", appRepo: "obs-poc-tracker-app"};</script>
+<script id="tracker-data" type="application/json">null</script>
+<script>
+window.__startTracker = function(GH){
+const TEMPLATE = '<!doctype html>\n' + document.documentElement.outerHTML;
+const LS = 'obs-poc-tracker-v2';
+const $ = s => document.querySelector(s);
+const S = v => v == null ? '' : String(v);
+const esc = s => S(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const STATUSES = ['Not started','In progress','Blocked','Done'];
+const cls = s => 's-' + (s||'Not started').split(' ')[0];
+const bcls = s => 'b-' + (s||'Not started').split(' ')[0];
+const EDIT = ['owner','status','target','actual','blocker','blockerSince','start'];
+// Conflict-safe merge: each field group carries its own timestamp, so two people editing
+// different fields of one task never overwrite each other. Same field: the later edit wins.
+const GROUPS = {status: ['status','actual'], target: ['target'], start: ['start'], blocker: ['blocker','blockerSince'], owner: ['owner']};
+const vals = t => Object.fromEntries(EDIT.map(k => [k, t[k] || '']));
+function stamp(t, bv, addDirty){
+  const now = Date.now(); t.fu = t.fu || {}; let ch = false;
+  Object.entries(GROUPS).forEach(([g, ks]) => { if(ks.some(k => String(bv[k] || '') !== String(t[k] || ''))){ t.fu[g] = now; ch = true; } });
+  if(ch){ t.updatedAt = now; if(addDirty !== false) dirty.add(t.id); } return ch;
+}
+function mergeTask(t, ot){
+  t.fu = t.fu || {}; const of = ot.fu || {}; let pulled = false, newer = false;
+  Object.entries(GROUPS).forEach(([g, ks]) => { const a = t.fu[g] || 0, b = of[g] || 0;
+    if(b > a){ ks.forEach(k => t[k] = ot[k] == null ? '' : ot[k]); t.fu[g] = b; pulled = true; } else if(a > b) newer = true; });
+  t.updatedAt = Math.max(t.updatedAt || 0, ot.updatedAt || 0); t.log = mergeLog(ot.log, t.log);
+  return {pulled, newer};
+}
+function mergeFrom(other, markDirty){
+  let n = 0; const names = new Set();
+  (other.tasks || []).forEach(ot => { const t = T().find(x => x.id === ot.id); if(!t){ if(markDirty !== 'load') return; DB.tasks.push(JSON.parse(JSON.stringify(ot))); return; }
+    const r = mergeTask(t, ot);
+    if(r.pulled){ n++; const l = (ot.log || [])[0]; if(l && l.by) names.add(l.by); }
+    if(r.newer || (markDirty === true && r.pulled)) dirty.add(t.id);   // the other copy lacks our newer edit: push it again
+    else if(markDirty !== true) dirty.delete(t.id);
+  });
+  return {n, names: [...names]};
+}
+
+// ---------- safe storage ----------
+let storageOK = true;
+const store = GH ? GH.store : {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ storageOK = false; return null; } },
+  set(k, v){ try { localStorage.setItem(k, v); } catch(e){ storageOK = false; } },
+  del(k){ try { localStorage.removeItem(k); } catch(e){ storageOK = false; } }
+};
+
+// ---------- dates ----------
+const pd = s => { if(!s) return null; const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const fd = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+const isWd = d => d.getDay() % 6 !== 0;
+const addWd = (d, n) => { const x = new Date(d); const st = n < 0 ? -1 : 1; while(n){ x.setDate(x.getDate()+st); if(isWd(x)) n -= st; } return x; };
+const prevWd = s => { const d = pd(s); return isWd(d) ? s : fd(addWd(d, -1)); };
+const wdDiff = (a, b) => { if(!a || !b) return 0; let x = pd(a), y = pd(b), sg = 1; if(y < x){ [x, y] = [y, x]; sg = -1; }
+  let n = 0; const c = new Date(x); while(c < y){ c.setDate(c.getDate()+1); if(isWd(c)) n++; } return n * sg; };
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const nice = s => { const d = pd(s); return d ? `${DOW[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}` : ''; };
+const short = s => { const d = pd(s); return d ? `${d.getDate()} ${MON[d.getMonth()]}` : ''; };
+const todayStr = () => fd(new Date());
+const realToday = todayStr();
+
+// ---------- data load + merge ----------
+const FILE = GH ? GH.file : JSON.parse(document.getElementById('tracker-data').textContent);
+let DB = FILE, base = FILE.savedAt, dirty = new Set(), bannerMsg = null;
+const fileTask = id => FILE.tasks.find(t => t.id === id);
+let local = null;
+try { local = JSON.parse(store.get(LS) || 'null'); } catch(e){ local = null; }
+if(local && local.baseline === FILE.baseline && local.db){
+  DB = local.db; dirty = new Set(local.dirty || []); base = Math.max(local.base || 0, FILE.savedAt || 0);
+  const had = dirty.size, r = mergeFrom(FILE, 'load');
+  if((FILE.savedAt || 0) > (DB.savedAt || 0)){ DB.savedAt = FILE.savedAt; DB.savedBy = FILE.savedBy; }
+  const by = FILE.savedBy ? ' by ' + FILE.savedBy : '';
+  if(r.n && dirty.size) bannerMsg = ['warn', `Opened a newer file (saved ${fmtTs(FILE.savedAt)}${by}). ${r.n} newer change${r.n>1?'s':''} from the file came in, and your ${dirty.size} change${dirty.size>1?'s are':' is'} kept. Click Save tracker to share the combined version.`];
+  else if(dirty.size) bannerMsg = ['info', `You have ${dirty.size} change${dirty.size>1?'s':''} not yet in the shared file${had ? '' : ' (this file was missing them)'}. Click Save tracker to share.`];
+  else if((FILE.savedAt || 0) < (local.base || 0)) bannerMsg = ['older', `This file (saved ${fmtTs(FILE.savedAt)}) is older than the version you last worked on (${fmtTs(local.base)}). Showing your newer data.`];
+}
+function mergeLog(a, b){ const m = new Map(); [...(Array.isArray(a)?a:[]), ...(Array.isArray(b)?b:[])].filter(l => l && typeof l.at === 'string').forEach(l => m.set(l.at + l.what, l)); return [...m.values()].sort((x, y) => y.at.localeCompare(x.at)).slice(0, 30); }
+function fmtTs(ms){ const d = new Date(ms); return `${d.getDate()} ${MON[d.getMonth()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+function T(){ return DB.tasks; }
+const tgt = t => t.target || t.end;
+const barEnd = t => t.status === 'Done' && t.actual ? t.actual : tgt(t);
+const variance = t => t.actual ? wdDiff(t.end, t.actual) : (t.target ? wdDiff(t.end, t.target) : 0);
+function persist(){ store.set(LS, JSON.stringify({baseline: DB.baseline, base, dirty: [...dirty], db: DB})); renderMeta(); if(typeof schedulePush === 'function' && dirty.size) schedulePush(); }
+function logChange(t, what){ (t.log = t.log || []).unshift({at: new Date().toISOString(), by: who() || 'Unknown', what}); t.log = t.log.slice(0, 30); }
+const allDates = FILE.tasks.flatMap(t => [t.start, t.end]).sort();
+const WIN0 = fd(new Date(pd(allDates[0]).getTime() - 30*864e5)), WIN1 = fd(new Date(pd(allDates[allDates.length-1]).getTime() + 60*864e5));
+
+// ---------- name ----------
+const who = () => store.get(LS + '-who') || $('#who').value.trim();
+$('#who').value = store.get(LS + '-who') || '';
+$('#who').addEventListener('change', e => { store.set(LS + '-who', e.target.value.trim()); renderMeta(); });
+let afterName = null;
+$('#nameCancel').onclick = () => { afterName = null; $('#nameModal').classList.remove('on'); };
+function needName(fn){ if(who()) return fn(); afterName = fn; $('#nameIn').value = ''; $('#nameCancel').classList.add('hidden'); $('#nameModal').classList.add('on'); setTimeout(() => $('#nameIn').focus(), 30); }
+$('#nameOk').onclick = () => { const n = $('#nameIn').value.trim(); if(!n){ $('#nameIn').focus(); return; } store.set(LS + '-who', n); $('#who').value = n; $('#nameModal').classList.remove('on'); const f = afterName; afterName = null; f && f(); };
+$('#nameIn').addEventListener('keydown', e => { if(e.key === 'Enter') $('#nameOk').click(); });
+
+// ---------- state ----------
+let view = 'today', sec = '', openId = null, collapsed = new Set(), panelSel = 'pDue', scrolledDay = null;
+let viewDay = realToday, weekendNote = false;
+if(!isWd(pd(viewDay))){ viewDay = fd(addWd(pd(viewDay), 1)); weekendNote = true; }
+
+// ---------- filters ----------
+const sections = [...new Set(T().map(t => t.section))];
+$('#chips').innerHTML = ['All', ...sections].map(s => `<button class="chip${s==='All'?' on':''}" data-s="${esc(s==='All'?'':s)}">${esc(s)}</button>`).join('');
+$('#chips').addEventListener('click', e => { const b = e.target.closest('.chip'); if(!b) return; sec = b.dataset.s; syncChips(); render(); });
+function syncChips(){ document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.s === sec)); }
+const ownersOf = t => S(t.owner).split(/[;\/+,]/).map(s => s.trim()).filter(Boolean);
+function fillOwners(){
+  const names = new Set(); T().forEach(t => ownersOf(t).forEach(n => names.add(n)));
+  const cur = $('#fOwner').value || store.get(LS + '-owner') || '';
+  $('#fOwner').innerHTML = '<option value="">All owners</option>' + [...names].sort().map(n => `<option${n===cur?' selected':''}>${esc(n)}</option>`).join('');
+}
+$('#fOwner').addEventListener('change', e => { store.set(LS + '-owner', e.target.value); render(); });
+$('#fStatus').addEventListener('change', render);
+$('#fText').addEventListener('input', render);
+const filtering = () => !!(sec || $('#fOwner').value || $('#fStatus').value || $('#fText').value.trim());
+$('#bFilt').onclick = () => { const on = document.querySelector('.bar').classList.toggle('fopen'); $('#bFilt').setAttribute('aria-expanded', on); };
+$('#bClear').onclick = () => { sec = ''; syncChips(); $('#fOwner').value = ''; store.set(LS + '-owner', ''); $('#fStatus').value = ''; $('#fText').value = ''; render(); };
+function pass(t){
+  if(sec && t.section !== sec) return false;
+  const o = $('#fOwner').value; if(o && !ownersOf(t).includes(o)) return false;
+  const s = $('#fStatus').value; if(s && t.status !== s) return false;
+  const q = $('#fText').value.trim().toLowerCase();
+  if(q && !(t.id + ' ' + t.artifact + ' ' + t.step + ' ' + t.artId).toLowerCase().includes(q)) return false;
+  return true;
+}
+
+// ---------- day nav ----------
+$('#dPrev').onclick = () => { viewDay = fd(addWd(pd(viewDay), -1)); weekendNote = false; render(); };
+$('#dNext').onclick = () => { viewDay = fd(addWd(pd(viewDay), 1)); weekendNote = false; render(); };
+$('#dToday').onclick = () => { viewDay = realToday; weekendNote = false; if(!isWd(pd(viewDay))){ viewDay = fd(addWd(pd(viewDay), 1)); weekendNote = true; } render(); };
+
+// ---------- views ----------
+document.querySelectorAll('nav button[data-v]').forEach(b => b.onclick = () => {
+  view = b.dataset.v; document.querySelectorAll('nav button[data-v]').forEach(x => x.classList.toggle('on', x === b));
+  $('#vToday').classList.toggle('hidden', view !== 'today'); $('#vPlan').classList.toggle('hidden', view !== 'plan'); render();
+});
+$('#ptabs').addEventListener('click', e => { const b = e.target.closest('button'); if(b) selectPanel(b.dataset.p); });
+function selectPanel(p){ panelSel = p; document.querySelectorAll('#ptabs button').forEach(b => b.classList.toggle('on', b.dataset.p === p)); document.querySelectorAll('.cols .panel').forEach(x => x.classList.toggle('on', x.id === p)); document.querySelectorAll('.kpi[data-go]').forEach(k => k.classList.toggle('sel', k.dataset.go === p)); }
+
+function varBadge(t){ const v = variance(t); if(!v) return ''; return v > 0 ? `<span class="var late">+${v}d late</span>` : `<span class="var early">${-v}d early</span>`; }
+function statusSel(t){
+  return `<select class="pill ${cls(t.status)}" data-id="${esc(t.id)}" aria-label="Status of ${esc(t.id)}">` + STATUSES.map(s => `<option${s===t.status?' selected':''}>${s}</option>`).join('') + '</select>';
+}
+function taskRow(t, extra){
+  return `<div class="task${t.status==='Done'?' isdone':''}" data-open="${esc(t.id)}" tabindex="0">${statusSel(t)}
+    <div><div class="t1">${esc(t.step)} <span class="tid">${esc(t.id)}</span></div>
+    <div class="t2">${esc(t.artifact)} · ${esc(t.owner)}</div>
+    ${t.blocker && t.status !== 'Done' ? `<div class="blk">⚠ ${esc(t.blocker)}</div>` : ''}</div>
+    <div class="r">${extra || ''}<div>${t.status === 'Done' && t.actual ? 'Done ' + short(t.actual) : 'Target ' + short(tgt(t))}${varBadge(t)}</div></div></div>`;
+}
+function emptyMsg(){ return `<div class="empty">Nothing here${filtering() ? ' for the current filters. <button class="clear" data-clear>Clear filters</button>' : '.'}</div>`; }
+function grouped(list, extraFn){
+  if(!list.length) return emptyMsg();
+  let h = '', cur = null;
+  list.forEach(t => { if(t.section !== cur){ cur = t.section; h += `<div class="sec">${esc(cur)}</div>`; } h += taskRow(t, extraFn && extraFn(t)); });
+  return h;
+}
+const bySec = arr => arr.sort((a, b) => (sections.indexOf(a.section) - sections.indexOf(b.section)) || (a.status === 'Done') - (b.status === 'Done'));
+function renderToday(){
+  const all = T().filter(pass), d = viewDay;
+  const dueOpen = all.filter(t => t.status !== 'Done' && tgt(t) === d);
+  const over = all.filter(t => t.status !== 'Done' && (tgt(t) < d || t.status === 'Blocked') && !dueOpen.includes(t));
+  const doneAll = all.filter(t => t.status === 'Done' && (t.actual || tgt(t)) <= d);
+  over.sort((a, b) => tgt(a).localeCompare(tgt(b)));
+  doneAll.sort((a, b) => (b.actual || tgt(b)).localeCompare(a.actual || tgt(a)) || (sections.indexOf(a.section) - sections.indexOf(b.section)));
+  const doneOn = doneAll.filter(t => (t.actual || tgt(t)) === d).length;
+  $('#lDue').innerHTML = grouped(bySec(dueOpen)); $('#cDue').textContent = dueOpen.length;
+  $('#lOver').innerHTML = grouped(bySec(over), t => { const od = tgt(t) < d ? wdDiff(tgt(t), d) : 0; return `<div class="od">${t.status === 'Blocked' ? 'Blocked' : ''}${t.status === 'Blocked' && od ? ' · ' : ''}${od ? od + 'd overdue' : ''}</div>`; });
+  $('#cOver').textContent = over.length;
+  $('#lDone').innerHTML = doneAll.length ? doneAll.map(t => taskRow(t)).join('') : emptyMsg();
+  $('#cDone').textContent = doneOn ? `${doneAll.length} · ${doneOn} on ${short(d)}` : doneAll.length;
+  $('#tDue').textContent = dueOpen.length; $('#tOver').textContent = over.length; $('#tDone').textContent = doneAll.length;
+  const done = all.filter(t => t.status === 'Done').length, pct = all.length ? Math.round(done / all.length * 100) : 0;
+  const planBy = all.filter(t => t.end <= d).length;
+  const overdueN = all.filter(t => t.status !== 'Done' && tgt(t) < d).length;
+  const k = [
+    ['Due ' + short(d), dueOpen.length, '', 'pDue', 'still open'],
+    ['Overdue', overdueN, 'alert', 'pOver', 'past target, not done'],
+    ['Blocked', all.filter(t => t.status === 'Blocked').length, 'alert', 'pOver', 'need help to move'],
+    ['Completed', doneAll.length, '', 'pDone', doneOn ? doneOn + ' on ' + short(d) : 'to date'],
+  ];
+  $('#kpis').innerHTML = k.map(([l, n, c, tg, sub]) => `<button class="kpi ${n && c ? c : ''}${tg === panelSel ? ' sel' : ''}" data-go="${tg}"><div class="n">${n}</div><div class="l"><b>${l}</b> · ${sub}</div></button>`).join('') +
+    `<div class="kpi prog"><div class="n">${pct}%</div><div class="l">${done} of ${all.length} steps done · plan expects ${planBy} by ${short(d)}</div><div class="pbar"><i style="width:${pct}%"></i></div></div>`;
+  selectPanel(panelSel);
+}
+// ---------- plan ----------
+function renderPlan(){
+  const all = T().filter(pass);
+  const dates = T().flatMap(t => [t.start, tgt(t), t.end, t.actual].filter(Boolean)).filter(x => x >= WIN0 && x <= WIN1).sort();
+  let d0 = pd(dates[0]), d1 = addWd(pd(dates[dates.length - 1]), 8); if(!isWd(d0)) d0 = addWd(d0, 1);
+  const days = []; for(let x = new Date(d0); x <= d1; x.setDate(x.getDate() + 1)) if(isWd(x)) days.push(fd(x));
+  const narrow = window.innerWidth < 760, CW = narrow ? 32 : 44;
+  const idx = s => { let i = days.indexOf(s); if(i < 0){ i = days.findIndex(x => x > s); if(i < 0) i = days.length - 1; } return i; };
+  const mid = window.innerWidth < 900, W = days.length * CW, LEFT = narrow ? Math.min(220, Math.round(window.innerWidth * 0.52)) : mid ? 300 : 470;
+  let h = `<div class="grid" style="grid-template-columns:${LEFT}px ${W}px">`;
+  h += `<div class="gh left">${narrow ? 'Artifact / step' : 'Artifact / step · owner · status'}</div><div class="gh" style="justify-content:flex-start;padding:0">` +
+    days.map(dd => `<div class="gh${dd===viewDay?' sel':''}${dd===realToday?' now':''}" style="width:${CW}px;position:static;height:40px;flex-direction:column;line-height:1.1">${pd(dd).getDate()}<small>${DOW[pd(dd).getDay()].slice(0,2)}</small></div>`).join('') + '</div>';
+  const back = days.map((dd, i) => `<div class="dayline" style="left:${i*CW}px"></div>`).join('') +
+    (days.includes(viewDay) ? `<div class="selcol" style="left:${idx(viewDay)*CW}px;width:${CW}px"></div>` : '') +
+    (realToday !== viewDay && days.includes(realToday) ? `<div class="nowline" style="left:${idx(realToday)*CW + CW/2}px"></div>` : '');
+  PD = {days, CW, idx};
+  const bar = (s, e, c, extra, id, lbl, dg) => { const a = idx(s), b = idx(e); return `<div class="gbar ${c} ${extra||''}${dg ? ' dg' : ''}" ${id?`data-open="${esc(id)}"`:''} ${dg ? `data-dg="${esc(dg[1])}" data-kind="${dg[0]}"` : ''} style="left:${a*CW+3}px;width:${Math.max(1,(b-a+1))*CW-6}px">${dg && dg[0] === 'step' ? '<i class="hl"></i><i class="hr"></i>' : ''}${lbl?`<span class="lbl">${lbl}</span>`:''}</div>`; };
+  const arts = [], am = {};
+  all.forEach(t => { if(!am[t.artId]){ am[t.artId] = {id: t.artId, name: t.artifact, section: t.section, steps: []}; arts.push(am[t.artId]); } am[t.artId].steps.push(t); });
+  let cur = null;
+  arts.forEach(a => {
+    if(a.section !== cur){ cur = a.section; h += `<div class="lc secrow">${esc(cur)}</div><div class="tl secrow"></div>`; }
+    const every = T().filter(t => t.artId === a.id), n = every.length, dn = every.filter(t => t.status === 'Done').length;
+    const roll = dn === n ? 'Done' : every.some(t => t.status === 'Blocked') ? 'Blocked' : every.some(t => t.status !== 'Not started') ? 'In progress' : 'Not started';
+    const s0 = every.map(t => t.start).sort()[0], e0 = every.map(barEnd).sort().slice(-1)[0];
+    const late = every.some(t => t.status !== 'Done' && tgt(t) < viewDay);
+    const col = collapsed.has(a.id);
+    h += `<div class="lc art${col?' collapsed':''}" data-tog="${esc(a.id)}"><span class="caret">▾</span><span class="id cid">${esc(a.id)}</span><span class="nm" title="${esc(a.id + ' · ' + a.name)}">${esc(a.name)}</span><span class="pill ${cls(roll)}">${roll === 'In progress' ? dn + '/' + n + ' done' : roll}</span></div>`;
+    h += `<div class="tl art">${back}${bar(s0, e0, bcls(roll), late ? 'over' : '', null, '', roll === 'Done' ? null : ['art', a.id])}</div>`;
+    if(col) return;
+    a.steps.forEach(t => {
+      const moved = (t.target && t.target !== t.end) || (t.planStart && t.start !== t.planStart);
+      const over = t.status !== 'Done' && tgt(t) < viewDay;
+      const ghost = moved ? (() => { const a1 = idx(t.planStart || t.start), b1 = idx(t.end); return `<div class="ghost" style="left:${a1*CW+3}px;width:${(b1-a1+1)*CW-6}px"></div>`; })() : '';
+      const v = variance(t), lb = (t.blocker && t.status !== 'Done' ? '⚠ ' : '') + (v ? (v > 0 ? '+' : '') + v + 'd' : '');
+      h += `<div class="lc step" data-open="${esc(t.id)}"><span></span><span class="id cid">${esc(t.id)}</span><span class="nm" title="${esc(t.id + ' · ' + t.owner)}">${esc(t.step)} <span class="id own">· ${esc(t.owner)}</span></span>${statusSel(t)}</div>`;
+      h += `<div class="tl">${back}${bar(t.start, barEnd(t), bcls(t.status), over ? 'over' : '', t.id, lb, t.status === 'Done' ? null : ['step', t.id])}${ghost}</div>`;
+    });
+  });
+  if(!arts.length) h += `<div class="lc secrow" style="color:#6B7785;font-weight:normal">${emptyMsg()}</div><div class="tl secrow"></div>`;
+  h += '</div>';
+  const pl = $('#plan'), sl = pl.scrollLeft, stp = pl.scrollTop;
+  pl.innerHTML = h; pl.scrollTop = stp;
+  if(scrolledDay !== viewDay){ scrolledDay = viewDay; pl.scrollTo({left: Math.max(0, idx(viewDay) * CW - 3 * CW), behavior: sl ? 'smooth' : 'auto'}); } else pl.scrollLeft = sl;
+}
+$('#plan').addEventListener('click', e => { const tg = e.target.closest('[data-tog]'); if(tg){ const id = tg.dataset.tog; collapsed.has(id) ? collapsed.delete(id) : collapsed.add(id); store.set(LS + '-col', JSON.stringify([...collapsed])); renderPlan(); } });
+try { collapsed = new Set(JSON.parse(store.get(LS + '-col') || '[]')); } catch(e){}
+$('#bExpand').onclick = () => { collapsed.clear(); store.set(LS + '-col', '[]'); renderPlan(); };
+$('#bCollapse').onclick = () => { T().forEach(t => collapsed.add(t.artId)); store.set(LS + '-col', JSON.stringify([...collapsed])); renderPlan(); };
+
+function render(){
+  $('#dLbl').textContent = nice(viewDay) + (viewDay === realToday ? ' (today)' : weekendNote ? ' (next working day)' : '');
+  $('#bClear').classList.toggle('hidden', !filtering());
+  $('#bFilt').textContent = filtering() ? 'Filters (on)' : 'Filters';
+  view === 'today' ? renderToday() : renderPlan();
+}
+function renderMeta(){
+  $('#meta').textContent = DB.savedAt !== FILE.savedAt ? `You saved a new copy at ${fmtTs(DB.savedAt)} · opened file from ${fmtTs(FILE.savedAt)}${FILE.savedBy ? ' by ' + FILE.savedBy : ''}` : `File saved ${fmtTs(FILE.savedAt)}${FILE.savedBy ? ' by ' + FILE.savedBy : ''}`; $('#meta').title = DB.baseline;
+  if(typeof syncState !== 'undefined' && (syncState === 'ok' || syncState === 'busy')) $('#meta').textContent = `${GH ? 'Saved to GitHub' : 'Live sync with OneDrive file'} · last change ${fmtTs(DB.savedAt)}${DB.savedBy ? ' by ' + DB.savedBy : ''}`;
+  const mm = $('#menuMeta'); if(mm) mm.textContent = $('#meta').textContent;
+  $('#bSave').innerHTML = '<span class="lg">Save tracker</span><span class="sm">Save</span>' + (dirty.size ? `<span class="cnt">${dirty.size}</span>` : '');
+  $('#bSave').title = dirty.size ? `${dirty.size} change(s) not yet saved into a file` : 'Everything is saved into the current file';
+}
+
+// ---------- inline status, undo, open ----------
+let undo = null;
+document.addEventListener('change', e => {
+  if(!e.target.matches('select.pill[data-id]')) return;
+  const sel = e.target, t = T().find(x => x.id === sel.dataset.id), val = sel.value;
+  sel.value = t.status;
+  if(val === 'Blocked'){ openDrawer(t.id, 'Blocked'); return; }
+  needName(() => {
+    const bv = vals(t), logLen = (t.log || []).length;
+    setStatus(t, val); stamp(t, bv); persist(); render();
+    undo = () => { const av = vals(t); Object.assign(t, bv); t.log = (t.log || []).slice((t.log || []).length - logLen); logChange(t, 'Undo'); stamp(t, av); persist(); render(); toast(`Undone: ${t.id}`); };
+    toast(`${t.id} → ${t.status}${val === 'Done' ? ' (actual ' + short(t.actual) + ')' : ''}`, true);
+  });
+});
+document.addEventListener('click', e => {
+  if(e.target.closest('[data-clear]')){ $('#bClear').click(); return; }
+  const k = e.target.closest('.kpi[data-go]'); if(k){ selectPanel(k.dataset.go); if(window.innerWidth >= 760){ const el = document.getElementById(k.dataset.go); el && el.scrollIntoView({behavior:'smooth', block:'nearest'}); } return; }
+  if(e.target.closest('select')) return;
+  if(suppressClick) return;
+  const o = e.target.closest('[data-open]'); if(o) openDrawer(o.dataset.open);
+});
+document.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.matches('.task[data-open]')) openDrawer(e.target.dataset.open); });
+function setStatus(t, s){
+  if(t.status === s) return; logChange(t, `Status ${t.status} → ${s}`); t.status = s;
+  if(s === 'Done'){ if(!t.actual){ t.actual = prevWd(todayStr()); logChange(t, `Actual done ${short(t.actual)}`); } if(t.blocker){ logChange(t, 'Blocker cleared (done)'); t.blocker = ''; t.blockerSince = ''; } }
+  else if(t.actual){ t.actual = ''; }
+}
+
+// ---------- drawer ----------
+let draft = null, snap = null;
+function openDrawer(id, forceStatus){
+  const t = T().find(x => x.id === id); if(!t) return; openId = id; draft = {status: forceStatus || t.status};
+  $('#xId').textContent = t.id + ' · ' + t.section; $('#xStep').textContent = t.step; $('#xArt').textContent = t.artId + ' · ' + t.artifact;
+  $('#xSeg').innerHTML = STATUSES.map(s => `<button class="${cls(s)}" data-s="${s}" aria-pressed="false">${s}</button>`).join(''); segOn();
+  $('#xStart').innerHTML = `Planned start<br><b>${nice(t.planStart || t.start)}</b>`; $('#xEnd').innerHTML = `Planned end<br><b>${nice(t.end)}</b>`;
+  $('#xStartIn').value = t.start;
+  $('#xTarget').value = tgt(t); $('#xActual').value = t.actual || ''; $('#xBlocker').value = t.blocker || ''; $('#xOwner').value = t.owner || '';
+  $('#xBlkHint').textContent = t.blockerSince ? `Raised ${nice(t.blockerSince)}` : (forceStatus === 'Blocked' ? 'Describe the blocker, then Save.' : '');
+  $('#xNoteWrap').classList.toggle('hidden', !t.note); $('#xNote').textContent = t.note || '';
+  $('#xLog').innerHTML = (t.log || []).length ? '<b>History</b>' + t.log.map(l => `<div>${new Date(l.at).toLocaleString()} · ${esc(l.by)} · ${esc(l.what)}</div>`).join('') : '';
+  hintT(); snap = formState();
+  $('#scrim').classList.add('on'); $('#drawer').classList.add('on');
+  setTimeout(() => (forceStatus === 'Blocked' ? $('#xBlocker') : $('#xSeg button.on') || $('#xSeg button')).focus(), 60);
+}
+const formState = () => JSON.stringify([draft && draft.status, $('#xStartIn').value, $('#xTarget').value, $('#xActual').value, $('#xBlocker').value.trim(), $('#xOwner').value.trim()]);
+function hintT(){
+  const t = T().find(x => x.id === openId); if(!t) return;
+  const tv = $('#xTarget').value || t.end, v = wdDiff(t.end, prevWd(tv));
+  const wk = !isWd(pd(tv)) ? ` <span style="color:#B26A00">Weekend: saves as ${nice(prevWd(tv))}.</span>` : '';
+  $('#xTargetHint').innerHTML = (v > 0 ? `<span style="color:#DA291C;font-weight:bold">${v} working day${v>1?'s':''} later than plan</span>` : v < 0 ? `<span style="color:#2E7D32;font-weight:bold">${-v} working day${v<-1?'s':''} earlier than plan</span>` : 'On the planned date.') + wk;
+  const a = $('#xActual').value;
+  $('#xActualHint').innerHTML = a ? (() => { const w = wdDiff(t.end, prevWd(a)); return w > 0 ? `<span style="color:#DA291C;font-weight:bold">Delivered ${w}d late</span>` : w < 0 ? `<span style="color:#2E7D32;font-weight:bold">Delivered ${-w}d early</span>` : 'Delivered on plan.'; })() : (draft.status === 'Done' ? 'Required for Done. Defaults to today.' : 'Setting a date marks the step Done.');
+}
+$('#xTarget').addEventListener('input', hintT);
+$('#xActual').addEventListener('input', () => { if($('#xActual').value){ draft.status = 'Done'; segOn(); } hintT(); });
+$('#xSeg').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; draft.status = b.dataset.s;
+  if(draft.status !== 'Done') $('#xActual').value = ''; else if(!$('#xActual').value) $('#xActual').value = prevWd(todayStr());
+  if(draft.status === 'Blocked' && !$('#xBlocker').value.trim()) $('#xBlocker').focus();
+  segOn(); hintT(); });
+function segOn(){ document.querySelectorAll('#xSeg button').forEach(b => { const on = b.dataset.s === draft.status; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); }
+function closeDrawer(force){
+  if(!openId) return true;
+  if(!force && formState() !== snap && !confirm('Discard the changes you made to this task?')) return false;
+  $('#scrim').classList.remove('on'); $('#drawer').classList.remove('on'); openId = null; return true;
+}
+$('#xClose').onclick = () => closeDrawer(); $('#scrim').onclick = () => closeDrawer();
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){ if($('#nameModal').classList.contains('on')){ if(!$('#nameCancel').classList.contains('hidden')) $('#nameCancel').click(); return; } if($('#help').classList.contains('on')){ $('#help').classList.remove('on'); return; } $('#menu').classList.remove('on'); closeDrawer(); }
+  if(e.key === 'Tab' && openId){ const f = [...$('#drawer').querySelectorAll('button,input,textarea,select')].filter(x => x.offsetParent !== null);
+    if(!f.length) return; const first = f[0], last = f[f.length - 1];
+    if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); } else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    else if(!$('#drawer').contains(document.activeElement)){ e.preventDefault(); first.focus(); } }
+});
+$('#xSave').onclick = () => needName(() => {
+  const t = T().find(x => x.id === openId); if(!t) return; const bv = vals(t);
+  let ns = $('#xStartIn').value; if(ns && !isWd(pd(ns))) ns = fd(addWd(pd(ns), 1));
+  let nt = $('#xTarget').value, na = $('#xActual').value; const nb = $('#xBlocker').value.trim(), no = $('#xOwner').value.trim();
+  let s = draft.status; if(na) s = 'Done';
+  if(s === 'Done' && !na) na = prevWd(todayStr());
+  if(s === 'Blocked' && !nb){ $('#xBlkHint').innerHTML = '<span style="color:#DA291C;font-weight:bold">Describe the blocker before saving.</span>'; $('#xBlocker').focus(); return; }
+  if(nt) nt = prevWd(nt); if(na) na = prevWd(na);
+  if(ns && (nt || t.end) < ns){ $('#xTargetHint').innerHTML = '<span style="color:#DA291C;font-weight:bold">Target date is before the start date.</span>'; $('#xTarget').focus(); return; }
+  let ch = false;
+  if(ns && ns !== t.start){ logChange(t, `Start ${short(t.start)} → ${short(ns)}`); t.start = ns; ch = true; }
+  if((nt || t.end) !== tgt(t)){ logChange(t, `Target ${short(tgt(t))} → ${short(nt || t.end)}`); t.target = nt && nt !== t.end ? nt : ''; ch = true; }
+  if(s !== t.status){ logChange(t, `Status ${t.status} → ${s}`); t.status = s; ch = true; }
+  if(s !== 'Done') na = '';
+  if(na !== (t.actual || '')){ logChange(t, na ? `Actual done ${short(na)}` : 'Actual done cleared'); t.actual = na; ch = true; }
+  const fb = s === 'Done' ? '' : nb;
+  if(fb !== (t.blocker || '')){ logChange(t, fb ? `Blocker: ${fb}` : (s === 'Done' ? 'Blocker cleared (done)' : 'Blocker cleared')); if(fb && !t.blocker) t.blockerSince = todayStr(); if(!fb) t.blockerSince = ''; t.blocker = fb; ch = true; }
+  if(no && no !== (t.owner || '')){ logChange(t, `Owner → ${no}`); t.owner = no; fillOwners(); ch = true; }
+  if(ch){ stamp(t, bv); persist(); }
+  closeDrawer(true); render(); toast(ch ? `Saved ${t.id}` : 'No changes');
+});
+
+// ---------- export / import / save ----------
+const COLS = [['ID','id'],['Section','section'],['Artifact ID','artId'],['Artifact','artifact'],['Step','step'],['Owner','owner'],['Status','status'],
+  ['Start','start'],['Planned start','planStart'],['Planned end','end'],['Target date','target'],['Actual done','actual'],['Variance (working days)','_var'],['Blocker','blocker'],['Blocker since','blockerSince'],['Note','note']];
+function dl(name, text, type){ const b = new Blob([text], {type}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+const fstamp = () => { const d = new Date(); return fd(d).replace(/-/g,'') + '-' + String(d.getHours()).padStart(2,'0') + String(d.getMinutes()).padStart(2,'0'); };
+function doExport(){
+  const q = v => { v = S(v); if(/^[=+\-@]/.test(v)) v = ' ' + v; return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  const lines = [COLS.map(c => c[0]).join(',')].concat(T().map(t => COLS.map(([, k]) => q(k === '_var' ? variance(t) : (k === 'target' ? tgt(t) : t[k]))).join(',')));
+  dl(`OBS-PoC-Tracker-data-${fstamp()}.csv`, '﻿' + lines.join('\r\n'), 'text/csv;charset=utf-8'); toast('CSV downloaded. Edit in Excel, save as CSV UTF-8, then Upload data.');
+}
+$('#bExport').onclick = doExport;
+$('#bImport').onclick = () => $('#file').click();
+$('#file').onchange = async e => {
+  const f = e.target.files[0]; if(!f) return; e.target.value = '';
+  needName(async () => {
+    let txt; const buf = await f.arrayBuffer();
+    try { txt = new TextDecoder('utf-8', {fatal: true}).decode(buf); } catch(err){ txt = new TextDecoder('windows-1252').decode(buf); }
+    if(/\.html?$/i.test(f.name)){
+      const other = parseTracker(txt);
+      if(!other || other.baseline !== DB.baseline){ alert('That HTML file is not this tracker.'); return; }
+      const r = mergeFrom(other, true); persist(); fillOwners(); render();
+      toast(r.n ? `${r.n} newer change${r.n > 1 ? 's' : ''} merged from ${f.name}.` : `Nothing newer in ${f.name}.`); return;
+    }
+    let rows;
+    try {
+      if(f.name.toLowerCase().endsWith('.json')){ const j = JSON.parse(txt); rows = Array.isArray(j) ? j : (j.tasks || []); }
+      else rows = parseCSV(txt);
+    } catch(err){ alert('Could not read the file: ' + err.message); return; }
+    if(!rows.length || !rows.some(r => r && r.id != null)){ alert('No tracker rows found. The file needs an ID column (use Download data to get the right layout). Saving from Excel as a semicolon-separated file is not supported.'); return; }
+    const work = JSON.parse(JSON.stringify(DB)); let hit = 0, miss = 0, changed = 0; const skipped = [], touched = new Set();
+    const conv = detectConv(rows);
+    try { rows.forEach(r => {
+      if(!r || typeof r !== 'object') return;
+      const id = S(r.id).trim(); const t = work.tasks.find(x => x.id === id); if(!t){ if(id) miss++; return; } hit++;
+      const bv = vals(t);
+      if(r.start !== undefined && S(r.start).trim()){ const v = normDate(S(r.start).trim(), conv, t.start); if(v) t.start = isWd(pd(v)) ? v : fd(addWd(pd(v), 1)); else skipped.push(`${id} start "${S(r.start).trim()}"`); }
+      const st = STATUSES.find(x => x.toLowerCase() === S(r.status).trim().toLowerCase());
+      if(S(r.status).trim() && !st) skipped.push(`${id} status "${S(r.status).trim()}"`);
+      if(st) t.status = st;
+      if(S(r.owner).trim()) t.owner = S(r.owner).trim();
+      if(r.target !== undefined){ const raw = S(r.target).trim(); if(!raw) t.target = ''; else { const v = normDate(raw, conv, t.end); if(v){ const w = prevWd(v); t.target = w !== t.end ? w : ''; } else skipped.push(`${id} target "${raw}"`); } }
+      if(r.actual !== undefined){ const raw = S(r.actual).trim(); if(!raw) t.actual = ''; else { const v = normDate(raw, conv, t.end); if(v) t.actual = prevWd(v); else skipped.push(`${id} actual "${raw}"`); } }
+      if(st && st !== 'Done') t.actual = ''; else if(t.actual) t.status = 'Done';
+      if(t.status === 'Done' && !t.actual) t.actual = prevWd(todayStr());
+      if(r.blocker !== undefined){ const b = S(r.blocker).trim(); if(b && !t.blocker) t.blockerSince = normDate(S(r.blockerSince)) || todayStr(); if(!b) t.blockerSince = ''; t.blocker = t.status === 'Done' ? '' : b; }
+      if(t.status === 'Done'){ t.blocker = ''; t.blockerSince = ''; }
+      if(Array.isArray(r.log)) t.log = mergeLog(r.log, t.log);
+      if(stamp(t, bv, false)){ changed++; (t.log = t.log || []).unshift({at: new Date().toISOString(), by: who() || 'Unknown', what: `Updated from upload ${f.name}`}); touched.add(t.id); }
+    }); } catch(err){ alert('Upload stopped: ' + err.message + '\n\nNothing was changed.'); return; }
+    touched.forEach(id => dirty.add(id));
+    DB = work; persist(); fillOwners(); render();
+    const msg = `${hit} rows matched, ${changed} changed${miss ? `, ${miss} IDs not found` : ''}.`;
+    if(skipped.length) alert(msg + `\n\n${skipped.length} value(s) skipped (invalid, or outside the PoC window ${short(WIN0)} to ${short(WIN1)}):\n` + skipped.slice(0, 15).join('\n') + (skipped.length > 15 ? '\n…' : ''));
+    toast(msg + ' Click Save tracker to share.');
+  });
+};
+function parseCSV(txt){
+  txt = txt.replace(/^﻿/, ''); if(!txt.trim()) return [];
+  const out = []; let row = [], f = '', q = false;
+  for(let i = 0; i < txt.length; i++){
+    const c = txt[i];
+    if(q){ if(c === '"'){ if(txt[i+1] === '"'){ f += '"'; i++; } else q = false; } else f += c; }
+    else if(c === '"') q = true; else if(c === ','){ row.push(f); f = ''; }
+    else if(c === '\n' || c === '\r'){ if(c === '\r' && txt[i+1] === '\n') i++; row.push(f); out.push(row); row = []; f = ''; }
+    else f += c;
+  }
+  if(f || row.length){ row.push(f); out.push(row); }
+  const hd = (out.shift() || []).map(h => h.trim()); const map = {}; COLS.forEach(([h, k]) => map[h.toLowerCase()] = k);
+  return out.filter(r => r.some(x => x.trim())).map(r => { const o = {}; hd.forEach((h, i) => { const k = map[h.toLowerCase()]; if(k) o[k] = r[i] ?? ''; }); return o; });
+}
+const inWin = s => s && s >= WIN0 && s <= WIN1;
+const mk = (y, m, d) => { const x = new Date(y, m-1, d); return x.getFullYear() === y && x.getMonth() === m-1 && x.getDate() === d ? fd(x) : ''; };
+function detectConv(rows){ let dm = 0, md = 0; rows.forEach(r => r && ['target','actual','blockerSince','start','end'].forEach(k => { const m = S(r[k]).trim().match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/); if(!m) return; if(+m[1] > 12) dm++; else if(+m[2] > 12) md++; })); return dm > md ? 'dm' : md > dm ? 'md' : ''; }
+function normDate(v, conv, near){
+  v = S(v).trim(); if(!v) return '';
+  let m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/); if(m){ const r = mk(+m[1], +m[2], +m[3]); return inWin(r) ? r : ''; }
+  m = v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+  if(m){ let a = +m[1], b = +m[2], y = +m[3]; if(y < 100) y += 2000;
+    const dm = inWin(mk(y, b, a)) ? mk(y, b, a) : '', md = inWin(mk(y, a, b)) ? mk(y, a, b) : '';
+    if(conv === 'dm') return dm; if(conv === 'md') return md;
+    if(dm && md && dm !== md && near) return Math.abs(pd(dm) - pd(near)) <= Math.abs(pd(md) - pd(near)) ? dm : md;
+    return dm || md; }
+  const p = new Date(v); if(isNaN(p)) return ''; const r = fd(p); return inWin(r) ? r : '';
+}
+function doSave(){
+  if(typeof fh !== 'undefined' && fh){ needName(() => syncNow(true)); return; }
+  needName(() => {
+    const now = Date.now();
+    const out = JSON.parse(JSON.stringify(DB)); out.savedAt = now; out.savedBy = who();
+    const json = JSON.stringify(out).replace(/</g, '\\u003c');
+    const html = TEMPLATE.replace(/(<script id="tracker-data" type="application\/json">)[\s\S]*?(<\/script>)/, (m0, a, b) => a + json + b);
+    dl('OBS-PoC-Tracker.html', html, 'text/html;charset=utf-8');
+    DB.savedAt = now; DB.savedBy = out.savedBy; base = now; dirty.clear(); persist();
+    $('#banner').classList.remove('show');
+    toast('Tracker saved. In OneDrive, upload it and choose Replace.');
+  });
+}
+$('#bSave').onclick = doSave;
+window.addEventListener('beforeunload', e => { if(dirty.size){ if(typeof fh !== 'undefined' && fh) syncNow(false); e.preventDefault(); e.returnValue = ''; } });
+// menu + help
+$('#bMore').onclick = e => { e.stopPropagation(); $('#menu').classList.toggle('on'); };
+document.addEventListener('click', e => { if(!e.target.closest('#menu') && !e.target.closest('#bMore')) $('#menu').classList.remove('on'); });
+$('#menu').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; $('#menu').classList.remove('on');
+  const fn = ({connect: () => connectFile(), name: () => { afterName = null; $('#nameIn').value = who(); $('#nameCancel').classList.remove('hidden'); $('#nameModal').classList.add('on'); setTimeout(() => $('#nameIn').focus(), 30); },
+    import: () => $('#file').click(), export: doExport, help: () => $('#help').classList.add('on')})[b.dataset.act]; fn && fn(); });
+$('#bHelp').onclick = () => $('#help').classList.add('on'); $('#helpClose').onclick = () => $('#help').classList.remove('on');
+$('#help').onclick = e => { if(e.target.id === 'help') $('#help').classList.remove('on'); };
+function showBanner(kind, txt){
+  $('#bannerTxt').textContent = txt; $('#banner').classList.toggle('warn', kind === 'warn'); $('#banner').classList.add('show');
+  const lbl = kind === 'older' ? 'Show this older file instead' : 'Discard my local edits';
+  $('#bannerBtns').innerHTML = (kind === 'nostore' ? '' : `<button id="bDiscard">${lbl}</button> `) + '<button id="bHide">Hide</button>';
+  $('#banner').classList.toggle('warn', kind === 'warn' || kind === 'older');
+  const d = $('#bDiscard'); if(d) d.onclick = () => { if(confirm(kind === 'older' ? 'Show the older file and drop your newer local data?' : 'Discard your local edits and show the file version?')){ store.del(LS); location.reload(); } };
+  $('#bHide').onclick = () => $('#banner').classList.remove('show');
+}
+let tt; function toast(m, withUndo){ $('#toastTxt').textContent = m; $('#toastUndo').classList.toggle('hidden', !withUndo); $('#toast').classList.add('on'); clearTimeout(tt); tt = setTimeout(() => { $('#toast').classList.remove('on'); undo = null; }, withUndo ? 5000 : 2800); }
+$('#toastUndo').onclick = () => { const u = undo; undo = null; $('#toast').classList.remove('on'); u && u(); };
+
+
+// ---------- live sync with the OneDrive file (Chrome / Edge) ----------
+const FSA = typeof window.showOpenFilePicker === 'function';
+let fh = null, syncState = FSA ? 'off' : 'nofsa', syncMsg = '', lastMod = -1, syncing = false, again = false, pushT = null, lastSyncAt = 0;
+const DATA_RE = /<script id="tracker-data" type="application\/json">([\s\S]*?)<\/script>/;
+function parseTracker(txt){ const m = S(txt).match(DATA_RE); if(!m) return null; try { return JSON.parse(m[1]); } catch(e){ return null; } }
+function buildHtml(db){ const json = JSON.stringify(db).replace(/</g, '\\u003c'); return TEMPLATE.replace(/(<script id="tracker-data" type="application\/json">)[\s\S]*?(<\/script>)/, (m0, a, b) => a + json + b); }
+function idbOpen(){ return new Promise((res, rej) => { const r = indexedDB.open('obs-poc-tracker', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function idbGet(k){ try { const db = await idbOpen(); return await new Promise(res => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); } catch(e){ return null; } }
+async function idbSet(k, v){ try { const db = await idbOpen(); await new Promise(res => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = res; tx.onerror = res; }); } catch(e){} }
+function setSync(st, msg){ syncState = st; syncMsg = msg || ''; renderSync(); renderMeta(); }
+function renderSync(){
+  const b = $('#sync'); if(!b) return;
+  const t = lastSyncAt ? fmtTs(lastSyncAt).split(' ').pop() : '';
+  const v = {off: ['', 'Connect OneDrive file', 'Connect'], nofsa: ['nofsa', 'Manual save mode', ''], ok: ['ok', '✓ Live sync' + (t ? ' ' + t : ''), '✓ Synced'],
+    busy: ['busy', 'Syncing…', 'Syncing…'], perm: ['warn', 'Resume sync', 'Resume'], err: ['err', 'Sync error: retry', 'Retry']}[syncState];
+  if(GH && v[1] === 'Connect OneDrive file'){ v[1] = 'Connecting…'; v[2] = '…'; }
+  b.className = 'sync ' + v[0]; b.innerHTML = `<span class="lg">${v[1]}</span><span class="sm">${v[2]}</span>`;
+  b.title = {off: 'Pick the tracker file in your synced OneDrive folder. Changes then save into it automatically.', nofsa: 'This browser cannot write files. Use Save tracker, or open in Chrome or Edge for live sync.',
+    ok: 'Changes write into the OneDrive file automatically. Colleagues\' changes are pulled in every 20 seconds.', busy: 'Writing to the OneDrive file', perm: 'Click once so the browser may write to the OneDrive file again', err: syncMsg || 'Could not reach the file'}[syncState];
+  if(GH) b.title = {ok: 'Every change saves to GitHub within seconds. Colleagues\' changes appear within 20 seconds.', busy: 'Saving to GitHub', err: (syncMsg || 'Could not reach GitHub') + '. Retrying automatically.'}[syncState] || b.title;
+  $('#bSave').classList.toggle('hidden', !!GH || syncState === 'ok' || syncState === 'busy');
+}
+async function perm(ask){ if(!fh) return false; const o = {mode: 'readwrite'}; try { if(await fh.queryPermission(o) === 'granted') return true; if(ask) return (await fh.requestPermission(o)) === 'granted'; } catch(e){} return false; }
+async function connectFile(){
+  if(!FSA){ $('#help').classList.add('on'); return; }
+  try {
+    const [h] = await window.showOpenFilePicker({types: [{description: 'OBS PoC Tracker', accept: {'text/html': ['.html', '.htm']}}], multiple: false});
+    const other = parseTracker(await (await h.getFile()).text());
+    if(!other || other.baseline !== DB.baseline){ alert('That file is not this tracker. Pick the OBS PoC Tracker file in your OneDrive folder.'); return; }
+    fh = h; await idbSet('handle', h); lastMod = -1;
+    if(!(await perm(true))){ setSync('perm'); return; }
+    await syncNow(true); if(syncState === 'ok') toast('Live sync on. Changes now save into the OneDrive file.');
+  } catch(e){ if(e && e.name !== 'AbortError') alert('Could not connect: ' + e.message); }
+}
+async function syncNow(ask){
+  if(!fh) return; if(syncing){ again = true; return; }
+  if(!(await perm(ask))){ setSync('perm'); return; }
+  syncing = true; if(dirty.size) setSync('busy');
+  try {
+    let f = await fh.getFile(), pulled = {n: 0, names: []};
+    if(f.lastModified !== lastMod){
+      const other = parseTracker(await f.text());
+      if(other && other.baseline === DB.baseline){ pulled = mergeFrom(other, false); if((other.savedAt || 0) > (DB.savedAt || 0)){ DB.savedAt = other.savedAt; DB.savedBy = other.savedBy; } base = Math.max(base, other.savedAt || 0); }
+      lastMod = f.lastModified;
+    }
+    if(dirty.size){
+      const now = Date.now(); DB.savedAt = now; DB.savedBy = who();
+      const w = await fh.createWritable(); await w.write(buildHtml(DB)); await w.close();
+      lastMod = (await fh.getFile()).lastModified; base = now; dirty.clear();
+    }
+    lastSyncAt = Date.now(); store.set(LS, JSON.stringify({baseline: DB.baseline, base, dirty: [...dirty], db: DB}));
+    $('#banner').classList.remove('show'); setSync('ok');
+    if(pulled.n){ fillOwners(); render(); toast(`${pulled.n} update${pulled.n > 1 ? 's' : ''} pulled in${pulled.names.length ? ' from ' + pulled.names.join(', ') : ''}`); }
+  } catch(e){
+    if(e && e.name === 'Conflict'){ lastMod = -1; again = true; }
+    else if(GH && e && (e.name === 'Locked' || e.name === 'Auth')) GH.onLocked(e);
+    else setSync(e && e.name === 'NotAllowedError' ? 'perm' : 'err', e && e.message);
+  }
+  syncing = false; if(again){ again = false; setTimeout(() => syncNow(false), 300); }
+}
+function schedulePush(){ if(!fh || syncState === 'perm') return; clearTimeout(pushT); pushT = setTimeout(() => syncNow(false), 1500); }
+$('#sync').onclick = () => { if(syncState === 'off' || syncState === 'nofsa') return connectFile(); syncNow(true); };
+setInterval(() => { if(fh && syncState !== 'perm' && document.visibilityState === 'visible') syncNow(false); }, 20000);
+document.addEventListener('visibilitychange', () => { if(fh && document.visibilityState === 'visible' && syncState !== 'perm') syncNow(false); });
+if(GH){ fh = GH.handle; GH.sync = syncNow; GH.dirtyCount = () => dirty.size; setSync('busy'); syncNow(false); } else (async () => { if(!FSA){ renderSync(); return; } const h = await idbGet('handle'); if(h && typeof h.getFile === 'function'){ fh = h; if(await perm(false)) syncNow(false); else setSync('perm'); } else renderSync(); })();
+
+// ---------- drag to reschedule (Overall plan) ----------
+let PD = null, drag = null, suppressClick = false;
+const shiftWd = (s, n) => { const i = Math.max(0, Math.min(PD.days.length - 1, PD.idx(s) + n)); return PD.days[i]; };
+function dragDates(d){
+  if(d.kind === 'step'){ const t = T().find(x => x.id === d.id), s0 = t.start, e0 = tgt(t); let s1 = s0, e1 = e0;
+    if(d.mode === 'move'){ s1 = shiftWd(s0, d.n); e1 = shiftWd(e0, d.n); }
+    else if(d.mode === 'end'){ e1 = shiftWd(e0, d.n); if(e1 < s1) e1 = s1; }
+    else { s1 = shiftWd(s0, d.n); if(s1 > e1) s1 = e1; }
+    return {t, s1, e1}; }
+  return null;
+}
+$('#plan').addEventListener('pointerdown', e => {
+  const b = e.target.closest('.gbar.dg'); if(!b || e.button > 0) return;
+  const mode = e.target.classList.contains('hl') ? 'start' : e.target.classList.contains('hr') ? 'end' : 'move';
+  drag = {b, mode, x0: e.clientX, y0: e.clientY, id: b.dataset.dg, kind: b.dataset.kind, started: false, pid: e.pointerId, touch: e.pointerType !== 'mouse', l0: b.offsetLeft, w0: b.offsetWidth, n: 0};
+  if(drag.touch && mode === 'move') drag.timer = setTimeout(() => { if(drag && !drag.started) beginDrag(e.clientX, e.clientY); }, 300);
+  else if(drag.touch) beginDrag(e.clientX, e.clientY);
+});
+function beginDrag(x, y){ drag.started = true; try { drag.b.setPointerCapture(drag.pid); } catch(e){} drag.b.classList.add('dragging'); document.body.classList.add('nosel'); tip(x, y); if(navigator.vibrate && drag.touch) navigator.vibrate(15); }
+function tip(x, y){
+  const el = $('#dtip'); let txt;
+  if(drag.kind === 'step'){ const r = dragDates(drag); const v = wdDiff(r.t.end, r.e1); txt = `${nice(r.s1)} → ${nice(r.e1)} · ${wdDiff(r.s1, r.e1) + 1} day${r.s1 === r.e1 ? '' : 's'}${v ? ` · ${v > 0 ? '+' + v + 'd late' : -v + 'd early'}` : ' · on plan'}`; }
+  else txt = drag.n ? `Move all open steps of ${drag.id} ${drag.n > 0 ? 'later' : 'earlier'} by ${Math.abs(drag.n)} working day${Math.abs(drag.n) > 1 ? 's' : ''}` : `Move all open steps of ${drag.id}`;
+  el.textContent = txt; el.style.display = 'block'; el.style.left = Math.min(x + 12, window.innerWidth - el.offsetWidth - 8) + 'px'; el.style.top = (y - 40) + 'px';
+}
+window.addEventListener('pointermove', e => {
+  if(!drag) return; const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+  if(!drag.started){ if(drag.touch){ if(Math.abs(dx) > 8 || Math.abs(dy) > 8){ clearTimeout(drag.timer); drag = null; } return; } if(Math.abs(dx) < 4) return; beginDrag(e.clientX, e.clientY); }
+  e.preventDefault();
+  const CW = PD.CW, n = Math.round(dx / CW); drag.n = n; const b = drag.b;
+  if(drag.mode === 'move'){ b.style.left = (drag.l0 + n * CW) + 'px'; }
+  else if(drag.mode === 'end'){ b.style.width = Math.max(CW - 6, drag.w0 + n * CW) + 'px'; }
+  else { const w = Math.max(CW - 6, drag.w0 - n * CW); b.style.left = (drag.l0 + drag.w0 - w) + 'px'; b.style.width = w + 'px'; }
+  tip(e.clientX, e.clientY);
+}, {passive: false});
+function endDrag(cancel){
+  if(!drag) return; clearTimeout(drag.timer); const d = drag; drag = null; document.body.classList.remove('nosel'); $('#dtip').style.display = 'none';
+  if(!d.started) return; suppressClick = true; setTimeout(() => suppressClick = false, 60);
+  if(cancel || !d.n){ renderPlan(); return; }
+  needName(() => {
+    const moved = []; const before = [];
+    const apply = (t, s1, e1, why) => { const bv = vals(t); before.push([t, bv, (t.log || []).length]);
+      if(s1 !== t.start) logChange(t, `${why}: start ${short(t.start)} → ${short(s1)}`);
+      if(e1 !== tgt(t)) logChange(t, `${why}: target ${short(tgt(t))} → ${short(e1)}`);
+      t.start = s1; t.target = e1 !== t.end ? e1 : ''; if(stamp(t, bv)) moved.push(t.id); };
+    if(d.kind === 'step'){ const r = dragDates(d); apply(r.t, r.s1, r.e1, d.mode === 'move' ? 'Moved' : 'Resized'); }
+    else T().filter(t => t.artId === d.id && t.status !== 'Done').forEach(t => apply(t, shiftWd(t.start, d.n), shiftWd(tgt(t), d.n), 'Moved with ' + d.id));
+    persist(); render();
+    undo = () => { before.forEach(([t, bv, ll]) => { const av = vals(t); Object.assign(t, bv); t.log = (t.log || []).slice((t.log || []).length - ll); logChange(t, 'Undo'); stamp(t, av); }); persist(); render(); toast('Move undone'); };
+    toast(d.kind === 'step' ? `${d.id}: ${nice(T().find(x => x.id === d.id).start)} → ${nice(tgt(T().find(x => x.id === d.id)))}` : `${moved.length} step${moved.length === 1 ? '' : 's'} of ${d.id} moved`, true);
+  });
+}
+window.addEventListener('pointerup', () => endDrag(false));
+window.addEventListener('pointercancel', () => endDrag(true));
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && drag) endDrag(true); });
+
+fillOwners(); renderMeta(); render();
+store.get(LS); // probe
+if(!storageOK) showBanner('nostore', 'Autosave is off in this browser. Click Save tracker before you close the page, or your edits are lost.');
+else if(bannerMsg) showBanner(bannerMsg[0], bannerMsg[1]);
+persist();
+let rz, lastNarrow = window.innerWidth < 760 ? 0 : window.innerWidth < 900 ? 1 : 2;
+window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { const n = window.innerWidth < 760 ? 0 : window.innerWidth < 900 ? 1 : 2; if(n !== lastNarrow){ lastNarrow = n; render(); } }, 150); });
+};
+if(!window.__GH_MODE) window.__startTracker(null);
+</script>
+<style>
+#ghGate{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;overflow:auto}
+#ghGate .gh-top{background:var(--red);color:#fff;padding:14px 22px;font-size:20px;font-weight:bold}
+#ghGate .gh-card{margin:8vh auto 30px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:26px 28px;width:min(420px,92vw)}
+#ghGate h2{margin:0 0 6px;color:var(--navy);font-size:20px}
+#ghGate .sub{margin:0 0 8px;color:var(--mut);font-size:13px}
+#ghGate label.l{display:block;font-size:12px;font-weight:bold;color:var(--mut);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.03em}
+#ghGate input[type=text],#ghGate input[type=password]{width:100%;border:1px solid var(--line);border-radius:6px;padding:10px;min-height:44px;font-size:15px}
+#ghGate .rem{display:flex;gap:8px;align-items:center;margin:16px 0 2px;font-size:14px;color:var(--ink);cursor:pointer}
+#ghGate .rem input{width:18px;height:18px}
+#ghGate .go{width:100%;margin-top:16px;min-height:46px;font-size:15px}
+#ghGate .err{color:var(--red);font-size:13px;min-height:18px;margin-top:10px;font-weight:bold}
+#ghGate .foot{font-size:12px;color:var(--mut);margin-top:10px;line-height:1.5}
+#ghGate .spin{color:var(--mut);font-size:14px;padding:10px 0}
+.adm .box{max-width:1000px;width:94%}
+.adm .tabs{display:flex;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--line);overflow-x:auto}
+.adm .tabs button{border:0;background:none;padding:10px 14px;cursor:pointer;font-weight:bold;color:var(--mut);border-bottom:3px solid transparent;white-space:nowrap;min-height:44px}
+.adm .tabs button.on{color:var(--navy);border-bottom-color:var(--red)}
+.adm table{width:100%;border-collapse:collapse;font-size:13px}
+.adm th{text-align:left;background:var(--navy);color:#fff;padding:7px 8px;position:sticky;top:0;font-weight:bold}
+.adm td{color:var(--ink);padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.adm .tw{max-height:34vh;overflow:auto;border:1px solid var(--line);border-radius:8px;margin-bottom:14px}
+.adm .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.adm input[type=password],.adm input[type=text]{width:100%;border:1px solid var(--line);border-radius:6px;padding:9px 10px;min-height:40px}
+.adm .card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.adm .card h3,.adm h3{margin:0 0 6px;font-size:15px;color:var(--navy)}
+.adm .msg{font-size:13px;margin-top:8px;min-height:16px;font-weight:bold}
+.adm .msg.ok{color:#2E7D32}.adm .msg.bad{color:var(--red)}
+.adm .kv{font-size:13px;color:var(--mut);line-height:1.6}
+.adm .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.adm code{background:var(--bg);padding:2px 6px;border-radius:4px}
+.adm .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+body.ghm:not(.ghm-on) > .top,body.ghm:not(.ghm-on) > .bar,body.ghm:not(.ghm-on) > main,body.ghm:not(.ghm-on) > .banner{display:none!important}
+#bAdmin,#bOut{display:none}
+body.ghm #bOut{display:inline-block}
+body.ghm-admin #bAdmin{display:inline-block}
+body.ghm .menu [data-gh=out]{display:block}
+.menu [data-gh]{display:none}
+body.ghm-admin .menu [data-gh=admin]{display:block}
+@media (max-width:900px){body.ghm #bOut,body.ghm-admin #bAdmin{display:none}}
+@media (max-width:760px){.adm .row{grid-template-columns:1fr}.adm .box{padding:16px}}
+</style>
+<div id="ghGate">
+  <div class="gh-top">OBS PoC Tracker</div>
+  <div class="gh-card">
+    <h2>Sign in</h2>
+    <div class="spin" id="ghLoad">Loading…</div>
+    <form id="ghForm" class="hidden" autocomplete="on">
+      <p class="sub" id="ghSub">Enter the team password to open the tracker.</p>
+      <label class="l" for="ghName">Your name</label><input type="text" id="ghName" autocomplete="name" placeholder="e.g. Calvin Tung">
+      <label class="l" for="ghPw">Password</label><input type="password" id="ghPw" autocomplete="current-password">
+      <label class="rem"><input type="checkbox" id="ghRem"> Remember me on this device for 30 days</label>
+      <button class="btn pri go" id="ghGo" type="submit">Unlock</button>
+      <div class="err" id="ghErr" role="alert"></div>
+    </form>
+    <div class="foot">Sign-ins are recorded with your name, time, IP address and browser for the tracker admin. Don't tick Remember me on a shared computer.</div>
+  </div>
+</div>
+<div class="modal adm" id="adm"><div class="box">
+  <div class="top"><h2 style="margin:0">Admin</h2><button class="btn" id="admClose">Close</button></div>
+  <div class="tabs" id="admTabs"><button data-t="log" class="on">Sign-ins</button><button data-t="pw">Passwords</button><button data-t="key">GitHub key</button></div>
+  <section data-p="log">
+    <div class="kv" id="admSum">Loading…</div>
+    <h3 style="margin-top:12px">People</h3>
+    <div class="tw"><table><thead><tr><th>Name</th><th>Sign-ins</th><th>Last seen</th><th>Last IP</th><th>Device</th><th>Access</th></tr></thead><tbody id="admPeople"></tbody></table></div>
+    <h3>Every sign-in, newest first</h3>
+    <div class="tw"><table><thead><tr><th>Time</th><th>Name</th><th>Event</th><th>IP address</th><th>Device</th><th>Access</th></tr></thead><tbody id="admRows"></tbody></table></div>
+    <div class="acts"><button class="btn" id="admRefresh">Refresh</button><button class="btn" id="admCsv">Download CSV</button></div>
+    <p class="kv">The browser looks up its own public IP address at sign-in. On the IBM VPN this shows the VPN address. Wrong-password attempts cannot be recorded.</p>
+  </section>
+  <section data-p="pw" class="hidden">
+    <div class="card">
+      <h3>Team password</h3>
+      <div class="kv">Current: <code id="admTeamPw">••••••••</code> <button class="btn" id="admShowPw" style="min-height:30px;padding:4px 10px">Show</button></div>
+      <div class="row" style="margin-top:10px"><input type="password" id="admT1" placeholder="New team password (12+ characters)" autocomplete="new-password"><input type="password" id="admT2" placeholder="Type it again" autocomplete="new-password"></div>
+      <div class="kv" style="margin-top:8px">Changing it signs everyone out, including remembered devices, and re-encrypts the data so the old password stops working. Edits on other laptops that have not saved yet are lost, so tell the team first.</div>
+      <div class="acts"><button class="btn pri" id="admTeamGo">Change team password</button></div>
+      <div class="msg" id="admTeamMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Admin password</h3>
+      <div class="row"><input type="password" id="admA1" placeholder="New admin password (12+ characters)" autocomplete="new-password"><input type="password" id="admA2" placeholder="Type it again" autocomplete="new-password"></div>
+      <div class="kv" style="margin-top:8px">Only the admin sign-in changes. The team keeps working.</div>
+      <div class="acts"><button class="btn pri" id="admAdmGo">Change admin password</button></div>
+      <div class="msg" id="admAdmMsg"></div>
+    </div>
+  </section>
+  <section data-p="key" class="hidden">
+    <div class="card">
+      <h3>GitHub access key</h3>
+      <div class="kv" id="admKeyInfo"></div>
+      <input type="password" id="admKey" placeholder="Paste a new key (github_pat_…)" style="margin-top:10px">
+      <div class="kv" style="margin-top:8px">The key needs Contents read and write on both tracker repos. It is stored encrypted, so only people with a password can use it.</div>
+      <div class="acts"><button class="btn pri" id="admKeyGo">Test and save key</button></div>
+      <div class="msg" id="admKeyMsg"></div>
+    </div>
+  </section>
+</div></div>
+<script>
+(function(){
+const M = window.__GH_MODE; if(!M) return;
+document.body.classList.add('ghm');
+const API = 'https://api.github.com', LSMAIN = 'obs-poc-tracker-v2', REM = 'obs-gh-remember-' + M.appRepo, ITER = 600000;
+const $g = s => document.querySelector(s);
+const te = new TextEncoder(), td = new TextDecoder();
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const b64 = u8 => { let s = ''; for(let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+const ub64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const escg = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rnd = n => crypto.getRandomValues(new Uint8Array(n));
+function err(name, msg){ const e = new Error(msg || name); e.name = name; return e; }
+
+// ---------- crypto: PBKDF2-SHA256 key wrap + AES-256-GCM with gzip ----------
+async function kekFrom(pw, salt, iter){ const k = await crypto.subtle.importKey('raw', te.encode(pw), 'PBKDF2', false, ['deriveBits']); return new Uint8Array(await crypto.subtle.deriveBits({name: 'PBKDF2', salt, iterations: iter || ITER, hash: 'SHA-256'}, k, 256)); }
+const aes = raw => crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+async function gz(u8, inflate){ const s = new Blob([u8]).stream().pipeThrough(inflate ? new DecompressionStream('gzip') : new CompressionStream('gzip')); return new Uint8Array(await new Response(s).arrayBuffer()); }
+async function sealJSON(raw, obj, aad){
+  let u8 = te.encode(JSON.stringify(obj)); const z = !!window.CompressionStream; if(z) u8 = await gz(u8);
+  const iv = rnd(12), ct = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv, additionalData: te.encode(aad)}, await aes(raw), u8));
+  return {v: 1, gz: z, iv: b64(iv), ct: b64(ct)};
+}
+async function openJSON(raw, box, aad){
+  let u8 = new Uint8Array(await crypto.subtle.decrypt({name: 'AES-GCM', iv: ub64(box.iv), additionalData: te.encode(aad)}, await aes(raw), ub64(box.ct)));
+  if(box.gz){ if(!window.DecompressionStream) throw err('Browser', 'This browser is too old. Use a current Chrome, Edge, Safari or Firefox.'); u8 = await gz(u8, true); }
+  return JSON.parse(td.decode(u8));
+}
+
+// ---------- state ----------
+let CFG = null, SEC = null, ROLE = null, KEK = null, DK = null, DKPREV = null, NAME = '', PERSIST = false, TOKEN_EXP = '', started = false, locked = false;
+async function openAny(box, aad){ try { return await openJSON(DK, box, aad); } catch(e){ if(DKPREV) return await openJSON(DKPREV, box, aad); throw e; } }
+
+// ---------- GitHub REST ----------
+async function api(method, path, body, opt = {}){
+  const h = {'Accept': opt.raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28'};
+  const tok = opt.token !== undefined ? opt.token : (SEC && SEC.token);
+  if(tok) h.Authorization = 'Bearer ' + tok;
+  if(body) h['Content-Type'] = 'application/json';
+  if(opt.etag) h['If-None-Match'] = opt.etag;
+  let r;
+  try { r = await fetch(API + path, {method, headers: h, body: body ? JSON.stringify(body) : undefined, cache: 'no-store'}); }
+  catch(e){ throw err('Network', 'Cannot reach GitHub. Check the connection.'); }
+  const x = r.headers.get('github-authentication-token-expiration'); if(x && tok === (SEC && SEC.token)) TOKEN_EXP = x;
+  return r;
+}
+const enc = p => p.split('/').map(encodeURIComponent).join('/');
+async function fail(r){
+  const j = await r.json().catch(() => ({})); const m = j.message || ('GitHub error ' + r.status);
+  if(r.status === 401) return err('Auth', 'The GitHub key was rejected or has expired.');
+  if(r.status === 403 && r.headers.get('x-ratelimit-remaining') === '0') return err('Http', 'GitHub rate limit reached. Retrying shortly.');
+  if(r.status === 403 || r.status === 404) return err('Auth', 'The GitHub key cannot reach the tracker repo (' + m + ').');
+  return err('Http', m);
+}
+async function readFile(owner, repo, path, etag, token){
+  const r = await api('GET', `/repos/${owner}/${repo}/contents/${enc(path)}?ref=main`, null, {etag, token});
+  if(r.status === 304) return {status: 304};
+  if(r.status === 404 && token !== null){ const t = await r.clone().json().catch(() => ({})); if(/Not Found/i.test(t.message || '')) return {status: 404}; }
+  if(!r.ok) throw await fail(r);
+  const j = await r.json(); let text;
+  if(j.content) text = td.decode(ub64(j.content.replace(/\s/g, '')));
+  else { const r2 = await api('GET', `/repos/${owner}/${repo}/contents/${enc(path)}?ref=main`, null, {raw: true, token}); if(!r2.ok) throw await fail(r2); text = await r2.text(); }
+  return {status: 200, sha: j.sha, text, etag: r.headers.get('ETag')};
+}
+async function writeFile(owner, repo, path, text, sha, msg, token){
+  const body = {message: msg, content: b64(te.encode(text)), branch: 'main'}; if(sha) body.sha = sha;
+  const r = await api('PUT', `/repos/${owner}/${repo}/contents/${enc(path)}`, body, {token});
+  if(r.status === 409) return {conflict: true};
+  if(r.status === 422){ const j = await r.clone().json().catch(() => ({})); if(/sha/i.test(j.message || '')) return {conflict: true}; }
+  if(!r.ok) throw await fail(r);
+  const j = await r.json(); return {sha: j.content.sha};
+}
+async function loadConfig(){
+  try {
+    const r = await fetch(`${API}/repos/${M.appOwner}/${M.appRepo}/contents/config.json?ref=main`, {headers: {Accept: 'application/vnd.github.raw+json'}, cache: 'no-store'});
+    if(r.ok) return await r.json();
+  } catch(e){}
+  const r = await fetch('config.json?t=' + Date.now(), {cache: 'no-store'});
+  if(!r.ok) throw err('Config', 'Cannot load the tracker settings. Check the connection and reload.');
+  return await r.json();
+}
+
+// ---------- remember me ----------
+function getRem(){ for(const st of [sessionStorage, localStorage]){ try { const r = JSON.parse(st.getItem(REM) || 'null'); if(r && r.exp > Date.now()) return r; } catch(e){} } return null; }
+function setRem(persist){
+  const r = {role: ROLE, salt: CFG[ROLE].salt, kek: b64(KEK), exp: Date.now() + (persist ? 30 * 864e5 : 12 * 36e5), persist};
+  try { sessionStorage.setItem(REM, JSON.stringify(r)); if(persist) localStorage.setItem(REM, JSON.stringify(r)); else localStorage.removeItem(REM); } catch(e){}
+}
+function clearRem(){ try { localStorage.removeItem(REM); sessionStorage.removeItem(REM); } catch(e){} }
+
+// ---------- encrypted local backup of unsaved edits ----------
+const mem = {}; let bkT = null;
+const store = {
+  get(k){ if(k === LSMAIN) return mem[k] == null ? null : mem[k]; try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k, v){ if(k === LSMAIN){ mem[k] = v; clearTimeout(bkT); bkT = setTimeout(backup, 800); return; } try { localStorage.setItem(k, v); } catch(e){} },
+  del(k){ if(k === LSMAIN){ delete mem[k]; try { localStorage.removeItem(LSMAIN + '-enc'); } catch(e){} return; } try { localStorage.removeItem(k); } catch(e){} }
+};
+async function backup(){ if(!DK || mem[LSMAIN] == null || locked) return; try { localStorage.setItem(LSMAIN + '-enc', JSON.stringify(await sealJSON(DK, mem[LSMAIN], 'local'))); } catch(e){} }
+async function restoreBackup(){ try { const t = localStorage.getItem(LSMAIN + '-enc'); if(t) mem[LSMAIN] = await openAny(JSON.parse(t), 'local'); } catch(e){ try { localStorage.removeItem(LSMAIN + '-enc'); } catch(x){} } }
+
+// ---------- data file handle for the sync engine ----------
+let dataSha = null, dataEtag = null, dataMod = 1, cacheText = '';
+const DATA_RE = /<script id="tracker-data" type="application\/json">([\s\S]*?)<\/script>/;
+const wrap = obj => '<script id="tracker-data" type="application/json">' + JSON.stringify(obj).replace(/</g, '\\u003c') + '<\/script>';
+async function fetchData(){
+  const D = SEC.data, r = await readFile(D.owner, D.repo, D.path, dataEtag);
+  if(r.status === 304) return null;
+  if(r.status === 404) throw err('Http', 'The tracker data file is missing in the data repo.');
+  let obj; try { obj = await openAny(JSON.parse(r.text), 'data'); } catch(e){ throw err('Locked', 'The password was changed.'); }
+  dataSha = r.sha; dataEtag = r.etag; dataMod++; cacheText = wrap(obj); return obj;
+}
+const handle = {
+  kind: 'file', name: 'GitHub',
+  async getFile(){ if(locked) throw err('Locked'); await fetchData(); return {lastModified: dataMod, text: async () => cacheText}; },
+  async createWritable(){ let buf = ''; return {write: async c => { buf += c; }, close: async () => {
+    if(locked) throw err('Locked');
+    const obj = JSON.parse(buf.match(DATA_RE)[1]), D = SEC.data;
+    const w = await writeFile(D.owner, D.repo, D.path, JSON.stringify(await sealJSON(DK, obj, 'data')), dataSha, 'Tracker update');
+    if(w.conflict){ dataEtag = null; throw err('Conflict'); }
+    dataSha = w.sha; dataEtag = null; cacheText = wrap(obj); dataMod++;
+  }}; },
+  async queryPermission(){ return 'granted'; }, async requestPermission(){ return 'granted'; }
+};
+
+// ---------- sign-in log ----------
+function device(){
+  const u = navigator.userAgent;
+  const b = /Edg\//.test(u) ? 'Edge' : /OPR\//.test(u) ? 'Opera' : /Firefox\//.test(u) ? 'Firefox' : /Chrome\//.test(u) ? 'Chrome' : /Safari\//.test(u) ? 'Safari' : 'Browser';
+  const o = /iPhone|iPad/.test(u) ? 'iOS' : /Android/.test(u) ? 'Android' : /Mac OS X/.test(u) ? 'Mac' : /Windows/.test(u) ? 'Windows' : /Linux/.test(u) ? 'Linux' : 'Other';
+  return b + ' · ' + o;
+}
+async function getIP(){
+  try { const c = new AbortController(), t = setTimeout(() => c.abort(), 3500);
+    const r = await fetch('https://api.ipify.org?format=json', {signal: c.signal, cache: 'no-store'}); clearTimeout(t); return (await r.json()).ip || 'unknown'; }
+  catch(e){ return 'unknown'; }
+}
+async function readLog(){
+  const D = SEC.data, r = await readFile(D.owner, D.repo, D.log);
+  if(r.status !== 200) return {arr: [], sha: null};
+  try { return {arr: await openAny(JSON.parse(r.text), 'log'), sha: r.sha}; } catch(e){ return {arr: [], sha: r.sha}; }
+}
+async function logAccess(event){
+  const rec = {at: new Date().toISOString(), name: NAME || 'Unknown', event, role: ROLE, ip: await getIP(), device: device()};
+  const D = SEC.data;
+  for(let i = 0; i < 6; i++){
+    try {
+      const {arr, sha} = await readLog(); arr.push(rec);
+      const w = await writeFile(D.owner, D.repo, D.log, JSON.stringify(await sealJSON(DK, arr.slice(-3000), 'log')), sha, 'Access log');
+      if(!w.conflict) return true;
+    } catch(e){ if(e.name === 'Auth') return false; }
+    await sleep(500 + Math.random() * 1200);
+  }
+  return false;
+}
+
+// ---------- gate ----------
+function showForm(msg, sub){
+  $g('#ghGate').classList.remove('hidden'); $g('#ghLoad').classList.add('hidden'); $g('#ghForm').classList.remove('hidden');
+  $g('#ghErr').textContent = msg || ''; if(sub) $g('#ghSub').textContent = sub;
+  $g('#ghName').value = $g('#ghName').value || (function(){ try { return localStorage.getItem(LSMAIN + '-who') || ''; } catch(e){ return ''; } })();
+  $g('#ghRem').checked = (function(){ try { return localStorage.getItem(REM + '-pref') === '1'; } catch(e){ return false; } })();
+  setTimeout(() => ($g('#ghName').value ? $g('#ghPw') : $g('#ghName')).focus(), 30);
+}
+function busy(t){ $g('#ghGo').disabled = !!t; $g('#ghGo').textContent = t || 'Unlock'; }
+async function tryPassword(pw){
+  for(const role of ['team', 'admin']){
+    if(!CFG[role]) continue;
+    const kek = await kekFrom(pw, ub64(CFG[role].salt), CFG.iter);
+    try { return {role, kek, sec: await openJSON(kek, CFG[role], 'cfg-' + role)}; } catch(e){}
+  }
+  return null;
+}
+async function enter(res, event){
+  ROLE = res.role; KEK = res.kek; SEC = res.sec; DK = ub64(SEC.dk); DKPREV = SEC.dkPrev ? ub64(SEC.dkPrev) : null;
+  if(started){ setRem(PERSIST); location.reload(); return; }
+  const obj = await fetchData();
+  await restoreBackup();
+  try { localStorage.setItem(LSMAIN + '-who', NAME); } catch(e){}
+  setRem(PERSIST);
+  document.body.classList.toggle('ghm-admin', ROLE === 'admin');
+  $g('#ghGate').classList.add('hidden'); document.body.classList.add('ghm-on');
+  started = true;
+  window.__startTracker(GH);
+  logAccess(event);
+  if(ROLE === 'admin') setTimeout(keyWarn, 1500);
+}
+$g('#ghForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = $g('#ghName').value.trim(), pw = $g('#ghPw').value;
+  if(name.length < 2){ $g('#ghErr').textContent = 'Enter your name.'; $g('#ghName').focus(); return; }
+  if(!pw){ $g('#ghErr').textContent = 'Enter the password.'; $g('#ghPw').focus(); return; }
+  $g('#ghErr').textContent = ''; busy('Unlocking…');
+  try {
+    CFG = await loadConfig();
+    const res = await tryPassword(pw);
+    if(!res){ busy(); $g('#ghErr').textContent = 'That password is not right. Check with the tracker admin.'; $g('#ghPw').select(); return; }
+    NAME = name; PERSIST = $g('#ghRem').checked; try { localStorage.setItem(REM + '-pref', PERSIST ? '1' : '0'); } catch(x){}
+    busy('Loading…'); await enter(res, 'Signed in' + (PERSIST ? ' (remember me)' : ''));
+    $g('#ghPw').value = ''; busy();
+  } catch(x){ busy(); $g('#ghErr').textContent = x.message || String(x); }
+});
+async function boot(){
+  try { CFG = await loadConfig(); }
+  catch(e){ $g('#ghLoad').textContent = e.message; return; }
+  const rem = getRem();
+  if(rem && CFG[rem.role] && CFG[rem.role].salt === rem.salt){
+    try {
+      const kek = ub64(rem.kek), sec = await openJSON(kek, CFG[rem.role], 'cfg-' + rem.role);
+      try { NAME = localStorage.getItem(LSMAIN + '-who') || 'Unknown'; } catch(e){ NAME = 'Unknown'; }
+      PERSIST = !!rem.persist;
+      await enter({role: rem.role, kek, sec}, rem.persist ? 'Opened (remembered)' : 'Opened (same session)');
+      return;
+    } catch(e){
+      if(e.name === 'Auth' || e.name === 'Network' || e.name === 'Http'){ $g('#ghLoad').textContent = e.message; showForm(e.message); return; }
+    }
+  }
+  if(rem){ clearRem(); showForm('', 'The password has changed since you last signed in. Enter the new password.'); return; }
+  showForm();
+}
+function onLocked(e){
+  if(locked) return; locked = true; clearRem();
+  try { localStorage.removeItem(LSMAIN + '-enc'); } catch(x){}
+  $g('#adm').classList.remove('on');
+  if(e && e.name === 'Auth') showForm(e.message, 'The tracker cannot reach GitHub. Ask the admin to check the GitHub key.');
+  else showForm('', 'The team password was changed. Sign in with the new password.');
+}
+const GH = {file: null, store, handle, onLocked};
+Object.defineProperty(GH, 'file', {get(){ return JSON.parse(cacheText.match(DATA_RE)[1]); }});
+
+// ---------- header buttons ----------
+const hdr = document.querySelector('header'), help = document.getElementById('bHelp');
+hdr.insertBefore(Object.assign(document.createElement('button'), {className: 'hbtn opt', id: 'bAdmin', textContent: 'Admin'}), help);
+hdr.insertBefore(Object.assign(document.createElement('button'), {className: 'hbtn opt', id: 'bOut', textContent: 'Sign out'}), help);
+const menu = document.getElementById('menu');
+menu.insertAdjacentHTML('beforeend', '<button data-gh="admin">Admin</button><button data-gh="out">Sign out</button>');
+menu.addEventListener('click', e => { const b = e.target.closest('[data-gh]'); if(!b) return; b.dataset.gh === 'admin' ? openAdmin() : signOut(); });
+$g('#bAdmin').onclick = () => openAdmin();
+$g('#bOut').onclick = () => signOut();
+async function signOut(){
+  if(!confirm('Sign out of the tracker on this device?')) return;
+  if(GH.dirtyCount && GH.dirtyCount()){ GH.sync(false); for(let i = 0; i < 20 && GH.dirtyCount(); i++) await sleep(250); }
+  await logAccess('Signed out');
+  clearRem(); try { localStorage.removeItem(LSMAIN + '-enc'); } catch(e){}
+  location.reload();
+}
+
+// ---------- admin ----------
+let LOG = [];
+const fmt = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}); };
+function msg(id, t, ok){ const el = $g(id); el.textContent = t; el.className = 'msg ' + (ok ? 'ok' : 'bad'); }
+$g('#admTabs').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#admTabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('#adm section').forEach(s => s.classList.toggle('hidden', s.dataset.p !== b.dataset.t));
+  if(b.dataset.t === 'key') keyInfo(); });
+$g('#admClose').onclick = () => $g('#adm').classList.remove('on');
+$g('#adm').addEventListener('click', e => { if(e.target.id === 'adm') $g('#adm').classList.remove('on'); });
+async function openAdmin(){ if(ROLE !== 'admin') return; $g('#adm').classList.add('on'); await loadLog(); }
+async function loadLog(){
+  $g('#admSum').textContent = 'Loading…';
+  try { LOG = (await readLog()).arr.slice().reverse(); } catch(e){ $g('#admSum').textContent = e.message; return; }
+  const ppl = {}; LOG.forEach(r => { const k = r.name || 'Unknown'; if(!ppl[k]) ppl[k] = {n: 0, last: r}; if(/^Signed in|^Opened/.test(r.event)) ppl[k].n++; });
+  const wk = Date.now() - 7 * 864e5, recent = new Set(LOG.filter(r => new Date(r.at) > wk).map(r => r.name));
+  $g('#admSum').textContent = `${LOG.length} events from ${Object.keys(ppl).length} people. ${recent.size} active in the last 7 days.`;
+  $g('#admPeople').innerHTML = Object.entries(ppl).sort((a, b) => b[1].last.at.localeCompare(a[1].last.at)).map(([n, p]) =>
+    `<tr><td><b>${escg(n)}</b></td><td>${p.n}</td><td>${fmt(p.last.at)}</td><td>${escg(p.last.ip)}</td><td>${escg(p.last.device)}</td><td>${escg(p.last.role)}</td></tr>`).join('') || '<tr><td colspan="6">No sign-ins yet.</td></tr>';
+  $g('#admRows').innerHTML = LOG.slice(0, 500).map(r => `<tr><td>${fmt(r.at)}</td><td>${escg(r.name)}</td><td>${escg(r.event)}</td><td>${escg(r.ip)}</td><td>${escg(r.device)}</td><td>${escg(r.role)}</td></tr>`).join('') || '<tr><td colspan="6">No sign-ins yet.</td></tr>';
+}
+$g('#admRefresh').onclick = loadLog;
+$g('#admCsv').onclick = () => {
+  const q = v => { v = String(v == null ? '' : v); if(/^[=+\-@]/.test(v)) v = ' ' + v; return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  const t = ['Time,Name,Event,IP address,Device,Access'].concat(LOG.map(r => [r.at, r.name, r.event, r.ip, r.device, r.role].map(q).join(','))).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + t], {type: 'text/csv'})); a.download = 'OBS-PoC-Tracker-sign-ins.csv'; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 300);
+};
+$g('#admShowPw').onclick = () => { const c = $g('#admTeamPw'), b = $g('#admShowPw'); const on = b.textContent === 'Show'; c.textContent = on ? (SEC.teamPw || '(not stored)') : '••••••••'; b.textContent = on ? 'Hide' : 'Show'; };
+async function reencrypt(path, aad, newDK, tok){
+  const D = SEC.data;
+  for(let i = 0; i < 8; i++){
+    const r = await readFile(D.owner, D.repo, path, null, tok); if(r.status !== 200) return;
+    const obj = await openAny(JSON.parse(r.text), aad);
+    const w = await writeFile(D.owner, D.repo, path, JSON.stringify(await sealJSON(newDK, obj, aad)), r.sha, aad === 'log' ? 'Access log' : 'Tracker update', tok);
+    if(!w.conflict) return; await sleep(400 + Math.random() * 600);
+  }
+  throw err('Http', 'The data kept changing. Try again in a minute.');
+}
+async function saveConfig({teamPw, adminPw, token}){
+  const tok = token || SEC.token, appTok = token || SEC.appToken || SEC.token;
+  const cr = await readFile(M.appOwner, M.appRepo, 'config.json', null, appTok);
+  if(cr.status !== 200) throw err('Http', 'Cannot read the tracker settings in the app repo.');
+  const cfg = JSON.parse(cr.text), iter = cfg.iter || ITER, rotate = !!teamPw;
+  const newDK = rotate ? rnd(32) : DK;
+  const base = {v: 1, dk: b64(newDK), dkPrev: rotate ? b64(DK) : (SEC.dkPrev || null), token: tok, data: SEC.data, epoch: (SEC.epoch || 0) + (rotate ? 1 : 0)};
+  let tSalt, tKek; if(teamPw){ tSalt = rnd(16); tKek = await kekFrom(teamPw, tSalt, iter); } else { tSalt = ub64(SEC.teamSalt); tKek = ub64(SEC.teamKek); }
+  let aSalt = ub64(cfg.admin.salt), aKek = KEK; if(adminPw){ aSalt = rnd(16); aKek = await kekFrom(adminPw, aSalt, iter); }
+  const adm = Object.assign({}, base, {role: 'admin', appToken: appTok, teamPw: teamPw || SEC.teamPw || '', teamKek: b64(tKek), teamSalt: b64(tSalt)});
+  const cfg2 = Object.assign({}, cfg, {iter, changedAt: new Date().toISOString(),
+    team: Object.assign({salt: b64(tSalt)}, await sealJSON(tKek, Object.assign({}, base, {role: 'team'}), 'cfg-team')),
+    admin: Object.assign({salt: b64(aSalt)}, await sealJSON(aKek, adm, 'cfg-admin'))});
+  const w = await writeFile(M.appOwner, M.appRepo, 'config.json', JSON.stringify(cfg2, null, 1), cr.sha, 'Settings update', appTok);
+  if(w.conflict) throw err('Http', 'The settings changed at the same moment. Try again.');
+  const oldTok = SEC.token;
+  SEC = adm; KEK = aKek; CFG = cfg2;
+  if(rotate){ await reencrypt(SEC.data.path, 'data', newDK, tok); await reencrypt(SEC.data.log, 'log', newDK, tok); DKPREV = DK; DK = newDK; dataEtag = null; backup(); }
+  setRem(PERSIST);
+  return oldTok !== tok;
+}
+function pwCheck(a, b){ if(a.length < 12) return 'Use at least 12 characters. A few random words work well.'; if(a !== b) return 'The two entries do not match.'; return ''; }
+$g('#admTeamGo').onclick = async () => {
+  const a = $g('#admT1').value, b = $g('#admT2').value, p = pwCheck(a, b); if(p) return msg('#admTeamMsg', p);
+  if(!confirm('Change the team password? Everyone is signed out and needs the new password.')) return;
+  msg('#admTeamMsg', 'Saving and re-encrypting…', true); $g('#admTeamGo').disabled = true;
+  try { if(GH.dirtyCount && GH.dirtyCount()){ GH.sync(false); for(let i = 0; i < 20 && GH.dirtyCount(); i++) await sleep(250); }
+    await saveConfig({teamPw: a}); $g('#admT1').value = $g('#admT2').value = ''; $g('#admTeamPw').textContent = '••••••••'; $g('#admShowPw').textContent = 'Show';
+    msg('#admTeamMsg', 'Done. Share the new team password. The web page may take a minute to pick it up.', true); logAccess('Changed team password'); }
+  catch(e){ msg('#admTeamMsg', e.message); }
+  $g('#admTeamGo').disabled = false;
+};
+$g('#admAdmGo').onclick = async () => {
+  const a = $g('#admA1').value, b = $g('#admA2').value, p = pwCheck(a, b); if(p) return msg('#admAdmMsg', p);
+  msg('#admAdmMsg', 'Saving…', true); $g('#admAdmGo').disabled = true;
+  try { await saveConfig({adminPw: a}); $g('#admA1').value = $g('#admA2').value = ''; msg('#admAdmMsg', 'Admin password changed.', true); logAccess('Changed admin password'); }
+  catch(e){ msg('#admAdmMsg', e.message); }
+  $g('#admAdmGo').disabled = false;
+};
+function keyInfo(){
+  const d = TOKEN_EXP ? new Date(TOKEN_EXP.replace(' UTC', 'Z').replace(' ', 'T')) : null;
+  const days = d && !isNaN(d) ? Math.round((d - Date.now()) / 864e5) : null;
+  $g('#admKeyInfo').innerHTML = `Data repo: <code>${escg(SEC.data.owner + '/' + SEC.data.repo)}</code> · App repo: <code>${escg(M.appOwner + '/' + M.appRepo)}</code><br>` +
+    (days == null ? 'Expiry: unknown' : `Current key expires <b>${d.toLocaleDateString([], {day: 'numeric', month: 'short', year: 'numeric'})}</b> (${days} day${days === 1 ? '' : 's'}).`);
+}
+function keyWarn(){
+  const d = TOKEN_EXP ? new Date(TOKEN_EXP.replace(' UTC', 'Z').replace(' ', 'T')) : null; if(!d || isNaN(d)) return;
+  const days = Math.round((d - Date.now()) / 864e5);
+  if(days <= 14){ const b = $g('#banner'); $g('#bannerTxt').textContent = `Admin: the GitHub key expires in ${days} day${days === 1 ? '' : 's'}. Create a new key and paste it under Admin → GitHub key, or the tracker stops saving.`; b.classList.add('show', 'warn'); $g('#bannerBtns').innerHTML = ''; }
+}
+$g('#admKeyGo').onclick = async () => {
+  const k = $g('#admKey').value.trim(); if(!/^(github_pat_|ghp_)/.test(k)) return msg('#admKeyMsg', 'That does not look like a GitHub key.');
+  msg('#admKeyMsg', 'Testing…', true); $g('#admKeyGo').disabled = true;
+  try {
+    const D = SEC.data, t = await readFile(D.owner, D.repo, D.path, null, k);
+    if(t.status !== 200) throw err('Auth', 'The new key cannot read the data repo.');
+    await saveConfig({token: k}); $g('#admKey').value = ''; keyInfo();
+    msg('#admKeyMsg', 'Key saved. Everyone uses it from their next sync.', true); logAccess('Replaced GitHub key');
+  } catch(e){ msg('#admKeyMsg', e.message); }
+  $g('#admKeyGo').disabled = false;
+};
+window.__GH = GH;
+boot();
+})();
+</script>
+
+</body>
+</html>
