@@ -277,6 +277,32 @@ button:not(:disabled):active{transform:scale(.97)}
 .ckb{display:inline-flex;align-items:center;font-size:11px;font-weight:bold;color:#56616D;background:var(--nsBg);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:1px}
 .ckb.full{color:var(--done);background:var(--doneBg)}
 @media (max-width:760px){.cki{padding:9px 6px}.cki input{width:22px;height:22px}}
+/* ---------- rich text notes ---------- */
+.rte{border:1px solid var(--line);border-radius:8px;overflow:hidden;transition:border-color 150ms,box-shadow 150ms}
+.rte:focus-within{border-color:var(--prog);box-shadow:0 0 0 3px rgba(31,95,168,.12)}
+.rtb{display:flex;flex-wrap:wrap;gap:2px;padding:4px;background:#FAFBFC;border-bottom:1px solid var(--line)}
+.rtb button{border:0;background:none;border-radius:5px;min-width:30px;height:28px;cursor:pointer;color:var(--ink);font-size:13px}
+@media (hover:hover){.rtb button:hover{background:var(--nsBg)}}
+.rtb button.on{background:var(--navy);color:#fff}
+.rtb .sep{width:1px;background:var(--line);margin:4px 3px}
+.rtx{min-height:96px;max-height:320px;overflow:auto;padding:9px 11px;font-size:14px;line-height:1.5;outline:none}
+.rtx:empty::before{content:attr(data-ph);color:#9AA4AE}
+.rtx p,.rtx div{margin:0 0 6px}.rtx h4{margin:4px 0 6px;font-size:14px;color:var(--navy)}
+.rtx ul,.rtx ol{margin:0 0 6px;padding-left:22px}.rtx blockquote{margin:0 0 6px;padding:2px 10px;border-left:3px solid var(--line);color:var(--mut)}
+.rtx a{color:var(--prog)}
+.np{font-size:12px;color:var(--mut);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+/* checklist groups, edit, reorder */
+.ckg{display:flex;align-items:center;gap:8px;padding:8px 8px 4px;font-size:11px;font-weight:bold;color:var(--navy);text-transform:uppercase;letter-spacing:.04em;user-select:none}
+.ckg .gc{margin-left:auto;color:var(--mut);font-weight:normal}
+.cki.ind{padding-left:14px}
+.cki .h,.ckg .h{cursor:grab;color:#A8B2BC;font-size:14px;line-height:18px;touch-action:none;padding:0 2px;flex:0 0 auto}
+.ckdrag{position:relative;z-index:3;background:#fff;box-shadow:0 6px 16px rgba(20,28,36,.14);border-radius:6px;transition:none!important}
+.ckdrag .h{cursor:grabbing}
+#xCk{position:relative}
+#ckLine{position:absolute;left:6px;right:6px;height:2px;background:var(--prog);border-radius:2px;display:none;pointer-events:none;z-index:4}
+.cki .ed{border:0;background:none;color:var(--mut);cursor:pointer;font-size:13px;padding:0 4px;transition:opacity 150ms}
+@media (hover:hover){.cki .ed{opacity:0}.cki:hover .ed,.cki:focus-within .ed{opacity:1}}
+.cke{flex:1;border:1px solid var(--prog);border-radius:5px;padding:4px 7px;font-size:13px;min-height:28px}
 /* ---------- toaster (Sonner-style stack) ---------- */
 #toaster{position:fixed;right:24px;bottom:24px;width:360px;max-width:calc(100vw - 32px);z-index:90;pointer-events:none}
 .tst{position:absolute;right:0;bottom:0;width:100%;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 20px rgba(20,28,36,.12);padding:13px 14px;display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4;pointer-events:auto;touch-action:none;user-select:none;
@@ -374,6 +400,16 @@ button:not(:disabled):active{transform:scale(.97)}
     <div class="fld"><label for="xStartIn">Start date</label><input type="date" id="xStartIn"></div>
     <div class="fld"><label for="xTarget">Target date</label><input type="date" id="xTarget"><div class="hint" id="xTargetHint"></div></div>
     <div class="fld"><label for="xActual">Actual done date</label><input type="date" id="xActual"><div class="hint" id="xActualHint"></div></div>
+    <div class="fld"><span class="lab" id="xNotesLab">Notes</span>
+      <div class="rte">
+        <div class="rtb" role="toolbar" aria-label="Formatting">
+          <button type="button" data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button><button type="button" data-cmd="italic" title="Italic (Ctrl+I)"><i>I</i></button><button type="button" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button><button type="button" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+          <span class="sep"></span><button type="button" data-cmd="formatBlock" data-val="H4" title="Heading">H</button><button type="button" data-cmd="insertUnorderedList" title="Bullet list">•≡</button><button type="button" data-cmd="insertOrderedList" title="Numbered list">1≡</button><button type="button" data-cmd="formatBlock" data-val="BLOCKQUOTE" title="Quote">❝</button>
+          <span class="sep"></span><button type="button" data-cmd="link" title="Link (Ctrl+K)">🔗</button><button type="button" data-cmd="removeFormat" title="Clear formatting">⌫</button>
+        </div>
+        <div class="rtx" id="xNotes" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="xNotesLab" data-ph="Working notes, decisions, links…"></div>
+      </div>
+      <div class="hint" id="xNotesHint"></div></div>
     <div class="fld"><label for="xBlocker">Blocker</label><textarea id="xBlocker" placeholder="What stops this step? Who can clear it?"></textarea><div class="hint" id="xBlkHint"></div></div>
     <div class="fld"><label for="xOwner">Owner</label><input type="text" id="xOwner"></div>
     <div class="fld" id="xNoteWrap"><span class="lab">Artifact note</span><div class="note" id="xNote"></div></div>
@@ -449,10 +485,10 @@ const esc = s => S(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;
 const STATUSES = ['Not started','In progress','Blocked','Done'];
 const cls = s => 's-' + (s||'Not started').split(' ')[0];
 const bcls = s => 'b-' + (s||'Not started').split(' ')[0];
-const EDIT = ['owner','status','target','actual','blocker','blockerSince','start','deleted'];
+const EDIT = ['owner','status','target','actual','blocker','blockerSince','start','deleted','notes','notesBy'];
 // Conflict-safe merge: each field group carries its own timestamp, so two people editing
 // different fields of one task never overwrite each other. Same field: the later edit wins.
-const GROUPS = {status: ['status','actual'], target: ['target'], start: ['start'], blocker: ['blocker','blockerSince'], owner: ['owner'], deleted: ['deleted']};
+const GROUPS = {status: ['status','actual'], target: ['target'], start: ['start'], blocker: ['blocker','blockerSince'], owner: ['owner'], deleted: ['deleted'], notes: ['notes','notesBy']};
 const vals = t => Object.fromEntries(EDIT.map(k => [k, t[k] || '']));
 function stamp(t, bv, addDirty){
   const now = Date.now(); t.fu = t.fu || {}; let ch = false;
@@ -466,9 +502,11 @@ function mergeTask(t, ot){
   if(ot.checklist || t.checklist){   // per-item merge: newer item wins; deletions are tombstones
     const mine = t.checklist || [], theirs = ot.checklist || [], byId = new Map(mine.map(i => [i.id, i]));
     theirs.forEach(oi => { const mi = byId.get(oi.id);
-      if(!mi){ mine.push(JSON.parse(JSON.stringify(oi))); pulled = true; }
-      else if((oi.u || 0) > (mi.u || 0)){ Object.assign(mi, oi); pulled = true; }
-      else if((mi.u || 0) > (oi.u || 0)) newer = true; });
+      if(!mi){ mine.push(JSON.parse(JSON.stringify(oi))); pulled = true; return; }
+      if((oi.u || 0) > (mi.u || 0)){ ['text', 'done', 'del', 'by'].forEach(k => { if(k in oi) mi[k] = oi[k]; else delete mi[k]; }); mi.u = oi.u; pulled = true; }
+      else if((mi.u || 0) > (oi.u || 0)) newer = true;
+      if((oi.ou || 0) > (mi.ou || 0)){ mi.o = oi.o; mi.ou = oi.ou; pulled = true; }   // order merges separately from content
+      else if((mi.ou || 0) > (oi.ou || 0)) newer = true; });
     if(mine.some(mi => !theirs.some(oi => oi.id === mi.id))) newer = true;
     t.checklist = mine;
   }
@@ -598,11 +636,27 @@ function statusSel(t){
   return `<select class="pill ${cls(t.status)}" data-id="${esc(t.id)}" aria-label="Status of ${esc(t.id)}">` + STATUSES.map(s => `<option${s===t.status?' selected':''}>${s}</option>`).join('') + '</select>';
 }
 const ckLive = t => (t.checklist || []).filter(i => !i.del);
+// ---------- rich text notes: whitelist sanitiser ----------
+const RT_OK = {B:1, STRONG:1, I:1, EM:1, U:1, S:1, STRIKE:1, UL:1, OL:1, LI:1, P:1, BR:1, DIV:1, A:1, H3:1, H4:1, CODE:1, BLOCKQUOTE:1, SPAN:1};
+function cleanHTML(html){
+  const doc = new DOMParser().parseFromString('<div>' + S(html) + '</div>', 'text/html'), root = doc.body.firstChild;
+  (function walk(n){ [...n.childNodes].forEach(c => {
+    if(c.nodeType === 3) return;
+    if(c.nodeType !== 1 || !RT_OK[c.tagName]){ if(c.nodeType === 1 && !/^(SCRIPT|STYLE|IFRAME|OBJECT|EMBED|svg|SVG)$/.test(c.tagName)){ walk(c); while(c.firstChild) n.insertBefore(c.firstChild, c); } c.remove(); return; }
+    [...c.attributes].forEach(a => { if(!(c.tagName === 'A' && a.name === 'href')) c.removeAttribute(a.name); });
+    if(c.tagName === 'A'){ const h = c.getAttribute('href') || ''; if(!/^(https?:|mailto:)/i.test(h)) c.removeAttribute('href'); else { c.setAttribute('target', '_blank'); c.setAttribute('rel', 'noopener noreferrer'); } }
+    walk(c); }); })(root);
+  const out = root.innerHTML.replace(/(<br>\s*)+$/i, '').trim();
+  return /^(<(p|div)>(<br>)?<\/(p|div)>)*$/i.test(out) || !root.textContent.trim() && !/<li/i.test(out) ? '' : out;
+}
+const plainNotes = h => { if(!h) return ''; const d = new DOMParser().parseFromString('<div>' + h.replace(/<(br|\/p|\/div|\/li|\/h3|\/h4)>/gi, '$&\n') + '</div>', 'text/html'); return d.body.textContent.replace(/\n{3,}/g, '\n\n').trim(); };
+const textToHTML = t => S(t).split(/\r?\n/).map(l => l.trim() ? '<p>' + esc(l) + '</p>' : '').join('');
 function ckBadge(t){ const l = ckLive(t), d = l.filter(i => i.done).length; return l.length ? `<span class="ckb${d === l.length ? ' full' : ''}" title="Checklist: ${d} of ${l.length} done">☑ ${d}/${l.length}</span>` : ''; }
 function taskRow(t, extra){
   return `<div class="task${t.status==='Done'?' isdone':''}" data-open="${esc(t.id)}" tabindex="0">${statusSel(t)}
     <div><div class="t1">${esc(t.step)} <span class="tid">${esc(t.id)}</span>${ckBadge(t)}</div>
     <div class="t2">${esc(t.artifact)} · ${esc(t.owner)}</div>
+    ${t.notes ? `<div class="np" title="${esc(plainNotes(t.notes).slice(0, 300))}">📝 ${esc(plainNotes(t.notes).replace(/\s+/g, ' ').slice(0, 90))}</div>` : ''}
     ${t.blocker && t.status !== 'Done' ? `<div class="blk">⚠ ${esc(t.blocker)}</div>` : ''}</div>
     <div class="r">${extra || ''}<div>${t.status === 'Done' && t.actual ? 'Done ' + short(t.actual) : 'Target ' + short(tgt(t))}${varBadge(t)}</div></div></div>`;
 }
@@ -743,6 +797,7 @@ function openDrawer(id, forceStatus){
   $('#xStart').innerHTML = `Planned start<br><b>${nice(t.planStart || t.start)}</b>`; $('#xEnd').innerHTML = `Planned end<br><b>${nice(t.end)}</b>`;
   $('#xStartIn').value = t.start;
   $('#xTarget').value = tgt(t); $('#xActual').value = t.actual || ''; $('#xBlocker').value = t.blocker || ''; $('#xOwner').value = t.owner || '';
+  $('#xNotes').innerHTML = cleanHTML(t.notes || ''); $('#xNotesHint').textContent = t.notes && t.fu && t.fu.notes ? `Last edited ${new Date(t.fu.notes).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})}${t.notesBy ? ' by ' + t.notesBy : ''}` : '';
   $('#xBlkHint').textContent = t.blockerSince ? `Raised ${nice(t.blockerSince)}` : (forceStatus === 'Blocked' ? 'Describe the blocker, then Save.' : '');
   $('#xNoteWrap').classList.toggle('hidden', !t.note); $('#xNote').textContent = t.note || '';
   $('#xLog').innerHTML = (t.log || []).length ? '<b>History</b>' + t.log.map(l => `<div>${new Date(l.at).toLocaleString()} · ${esc(l.by)} · ${esc(l.what)}</div>`).join('') : '';
@@ -750,14 +805,27 @@ function openDrawer(id, forceStatus){
   $('#scrim').classList.add('on'); $('#drawer').classList.add('on');
   setTimeout(() => (forceStatus === 'Blocked' ? $('#xBlocker') : $('#xSeg button.on') || $('#xSeg button')).focus(), 60);
 }
+const ckGroupOf = txt => { const m = S(txt).match(/^([A-Za-z][A-Za-z0-9 &\/-]{1,23}):\s+(.+)$/); return m ? [m[1].trim(), m[2]] : ['', S(txt)]; };
+function ckSorted(t){ return (t.checklist || []).map((i, k) => [i, i.o != null ? i.o : k]).filter(x => !x[0].del).sort((a, b) => a[1] - b[1]).map(x => x[0]); }
+function ckRuns(items){ const runs = []; items.forEach(i => { const g = ckGroupOf(i.text)[0]; if(!runs.length || runs[runs.length - 1].g !== g) runs.push({g, items: []}); runs[runs.length - 1].items.push(i); }); return runs; }
 function renderCk(t, animId){
-  const l = ckLive(t), d = l.filter(i => i.done).length;
+  const l = ckSorted(t), d = l.filter(i => i.done).length;
   $('#xCkCount').textContent = l.length ? `${d} of ${l.length} done` : '';
   $('#xCkBar').style.width = l.length ? (d / l.length * 100) + '%' : '0';
   $('#xCkBar').parentElement.parentElement.classList.toggle('hidden', !l.length);
-  $('#xCk').innerHTML = l.length ? l.map(i => { const m = i.text.match(/^(Application|Migration|Kafka):\s*(.+)$/);
-    return `<div class="cki${i.done ? ' done' : ''}${i.id === animId ? ' new' : ''}" data-ck="${esc(i.id)}"><input type="checkbox" id="ck-${esc(i.id)}"${i.done ? ' checked' : ''}><label for="ck-${esc(i.id)}">${m ? `<span class="grp">${esc(m[1])}</span>${esc(m[2])}` : esc(i.text)}</label><button class="del" type="button" aria-label="Remove item" title="Remove">×</button></div>`; }).join('')
-    : '<div class="ckempty">No checklist items yet. Add one below.</div>';
+  if(!l.length){ $('#xCk').innerHTML = '<div class="ckempty">No checklist items yet. Add one below.</div>'; return; }
+  const runs = ckRuns(l), heads = runs.some(r => r.g);
+  $('#xCk').innerHTML = runs.map((r, ri) => (heads ? `<div class="ckg" data-run="${ri}"><span class="h" title="Drag to move this group" aria-hidden="true">⠿</span><span class="gn">${esc(r.g || 'Other')}</span><span class="gc">${r.items.filter(i => i.done).length}/${r.items.length}</span></div>` : '') +
+    r.items.map(i => `<div class="cki${i.done ? ' done' : ''}${i.id === animId ? ' new' : ''}${heads ? ' ind' : ''}" data-ck="${esc(i.id)}"><span class="h" title="Drag to reorder (or Alt+↑/↓)" aria-hidden="true">⠿</span><input type="checkbox" id="ck-${esc(i.id)}"${i.done ? ' checked' : ''} aria-label="${esc(i.text)}"><label for="ck-${esc(i.id)}">${esc(ckGroupOf(i.text)[1])}</label><button class="ed" type="button" aria-label="Edit item" title="Edit">✎</button><button class="del" type="button" aria-label="Remove item" title="Remove">×</button></div>`).join('')).join('');
+}
+function ckReorder(t, movingIds, beforeId, newGroup){
+  const now = Date.now(), cur = ckSorted(t), moving = cur.filter(i => movingIds.includes(i.id)), rest = cur.filter(i => !movingIds.includes(i.id));
+  let at = beforeId ? rest.findIndex(i => i.id === beforeId) : rest.length; if(at < 0) at = rest.length;
+  const order = [...rest.slice(0, at), ...moving, ...rest.slice(at)];
+  let changed = false;
+  order.forEach((i, k) => { const old = i.o != null ? i.o : (t.checklist || []).indexOf(i); if(old !== k || i.o == null){ if(old !== k) changed = true; i.o = k; i.ou = now; } });
+  if(newGroup !== undefined) moving.forEach(i => { const [g, body] = ckGroupOf(i.text); if(g !== newGroup){ i.text = newGroup ? `${newGroup}: ${body}` : body; i.u = now; changed = true; } });
+  return changed;
 }
 function ckChange(t, what, item){
   t.updatedAt = Date.now(); dirty.add(t.id); logChange(t, what); persist(); render(); renderCk(t, item && item.id);
@@ -776,10 +844,62 @@ $('#xCk').addEventListener('click', e => {
     undo = () => { it.del = false; it.u = Date.now(); ckChange(t, `Restored checklist item: ${it.text}`); };
     toast(`Removed "${it.text.length > 40 ? it.text.slice(0, 40) + '…' : it.text}"`, true, 'info'); });
 });
+function ckEdit(row){
+  const t = T().find(x => x.id === openId); const it = t && (t.checklist || []).find(i => i.id === row.dataset.ck); if(!it || row.querySelector('.cke')) return;
+  const lab = row.querySelector('label'); const inp = document.createElement('input'); inp.type = 'text'; inp.className = 'cke'; inp.value = it.text; inp.maxLength = 200;
+  lab.replaceWith(inp); inp.focus(); inp.select(); let done = false;
+  const finish = save => { if(done) return; done = true; const v = inp.value.trim();
+    if(save && v && v !== it.text) needName(() => { const old = it.text; it.text = v; it.u = Date.now(); it.by = who(); ckChange(t, `Edited checklist item: "${old}" → "${v}"`); });
+    else renderCk(t); };
+  inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); finish(true); } if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); finish(false); } });
+  inp.addEventListener('blur', () => finish(true));
+}
+$('#xCk').addEventListener('click', e => { const b = e.target.closest('.ed'); if(b) ckEdit(b.closest('[data-ck]')); });
+$('#xCk').addEventListener('dblclick', e => { const l = e.target.closest('.cki label'); if(l){ e.preventDefault(); ckEdit(l.closest('[data-ck]')); } });
+$('#xCk').addEventListener('keydown', e => {
+  if(!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return; const row = e.target.closest('[data-ck]'); if(!row) return; e.preventDefault();
+  const t = T().find(x => x.id === openId); const l = ckSorted(t), k = l.findIndex(i => i.id === row.dataset.ck), j = e.key === 'ArrowUp' ? k - 1 : k + 1; if(j < 0 || j >= l.length) return;
+  needName(() => { const before = e.key === 'ArrowUp' ? l[j].id : (l[j + 1] ? l[j + 1].id : null);
+    if(ckReorder(t, [l[k].id], before, ckGroupOf(l[j].text)[0])){ ckChange(t, `Moved checklist item: ${l[k].text}`); const r = document.querySelector(`#xCk [data-ck="${l[k].id}"] input`); r && r.focus(); } });
+});
+// pointer drag to reorder items and whole groups (mouse and touch)
+let ckd = null;
+$('#xCk').addEventListener('pointerdown', e => {
+  const h = e.target.closest('.h'); if(!h || e.button > 0) return; e.preventDefault();
+  const row = h.closest('.cki, .ckg'), t = T().find(x => x.id === openId); if(!t) return;
+  const isG = row.classList.contains('ckg'), runs = ckRuns(ckSorted(t));
+  const ids = isG ? runs[+row.dataset.run].items.map(i => i.id) : [row.dataset.ck];
+  const els = isG ? [row, ...ids.map(id => document.querySelector(`#xCk [data-ck="${id}"]`))] : [row];
+  ckd = {t, isG, ids, els, y0: e.clientY, pid: e.pointerId, target: undefined};
+  h.setPointerCapture(e.pointerId); els.forEach(x => x.classList.add('ckdrag')); document.body.classList.add('nosel');
+  let ln = $('#ckLine'); if(!ln){ ln = document.createElement('div'); ln.id = 'ckLine'; $('#xCk').appendChild(ln); }
+});
+window.addEventListener('pointermove', e => {
+  if(!ckd) return; const dy = e.clientY - ckd.y0; ckd.els.forEach(x => x.style.transform = `translateY(${dy}px)`);
+  const list = $('#xCk'), cand = [...list.querySelectorAll(ckd.isG ? '.ckg' : '.cki')].filter(x => !ckd.els.includes(x));
+  let before = null; for(const c of cand){ const r = c.getBoundingClientRect(); if(e.clientY < r.top + r.height / 2){ before = c; break; } }
+  ckd.target = before; const ln = $('#ckLine'), lr = list.getBoundingClientRect();
+  const y = before ? before.getBoundingClientRect().top - lr.top - 1 : (cand.length ? cand[cand.length - 1].getBoundingClientRect().bottom - lr.top + 1 : 0);
+  ln.style.top = (y + list.scrollTop) + 'px'; ln.style.display = 'block';
+}, {passive: false});
+function ckDrop(cancel){
+  if(!ckd) return; const d = ckd; ckd = null; document.body.classList.remove('nosel'); const ln = $('#ckLine'); if(ln) ln.style.display = 'none';
+  d.els.forEach(x => { x.style.transform = ''; x.classList.remove('ckdrag'); });
+  if(cancel || d.target === undefined) return;
+  const t = d.t, l = ckSorted(t);
+  let beforeId = null, group;
+  if(d.isG){ if(d.target){ const runs = ckRuns(l); beforeId = runs[+d.target.dataset.run].items[0].id; } }
+  else if(d.target){ beforeId = d.target.dataset.ck; group = ckGroupOf(l.find(i => i.id === beforeId).text)[0]; }
+  else { const rest = l.filter(i => !d.ids.includes(i.id)); group = rest.length ? ckGroupOf(rest[rest.length - 1].text)[0] : undefined; }
+  needName(() => { if(ckReorder(t, d.ids, beforeId, d.isG ? undefined : group)) ckChange(t, d.isG ? `Moved checklist group: ${ckGroupOf(l.find(i => i.id === d.ids[0]).text)[0] || 'Other'}` : `Moved checklist item: ${l.find(i => i.id === d.ids[0]).text}`); else renderCk(t); });
+}
+window.addEventListener('pointerup', () => ckDrop(false));
+window.addEventListener('pointercancel', () => ckDrop(true));
 $('#xCkForm').addEventListener('submit', e => {
   e.preventDefault(); const txt = $('#xCkIn').value.trim(); if(!txt) return;
   const t = T().find(x => x.id === openId); if(!t) return;
-  needName(() => { const it = {id: 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: txt.slice(0, 200), done: false, u: Date.now(), by: who()};
+  needName(() => { const ls = ckSorted(t), last = ls[ls.length - 1], lastO = last ? (last.o != null ? last.o : (t.checklist || []).indexOf(last)) : -1;
+    const it = {id: 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: txt.slice(0, 200), done: false, u: Date.now(), o: lastO + 1, ou: Date.now(), by: who()};
     (t.checklist = t.checklist || []).push(it); $('#xCkIn').value = ''; ckChange(t, `Added checklist item: ${it.text}`, it); $('#xCkIn').focus(); });
 });
 // ---------- add / delete steps ----------
@@ -828,7 +948,24 @@ $('#xDel').onclick = () => {
     toast(`Deleted "${t.step}" from ${t.artId}`, true, 'info');
   });
 };
-const formState = () => JSON.stringify([draft && draft.status, $('#xStartIn').value, $('#xTarget').value, $('#xActual').value, $('#xBlocker').value.trim(), $('#xOwner').value.trim()]);
+// ---------- rich text toolbar ----------
+document.querySelector('.rtb').addEventListener('mousedown', e => { if(e.target.closest('button')) e.preventDefault(); });
+document.querySelector('.rtb').addEventListener('click', e => {
+  const b = e.target.closest('button[data-cmd]'); if(!b) return; const ed = $('#xNotes'); ed.focus();
+  const c = b.dataset.cmd;
+  if(c === 'link'){ const u = prompt('Link address (https://…)', 'https://'); if(u && /^(https?:|mailto:)/i.test(u.trim())) document.execCommand('createLink', false, u.trim()); }
+  else if(c === 'formatBlock'){ const cur = (document.queryCommandValue('formatBlock') || '').toUpperCase(); document.execCommand('formatBlock', false, cur === b.dataset.val ? 'P' : b.dataset.val); }
+  else if(c === 'removeFormat'){ document.execCommand('removeFormat'); document.execCommand('formatBlock', false, 'P'); document.execCommand('unlink'); }
+  else document.execCommand(c);
+  rtState();
+});
+function rtState(){ document.querySelectorAll('.rtb button[data-cmd]').forEach(b => { let on = false; try { on = b.dataset.val ? (document.queryCommandValue('formatBlock') || '').toUpperCase() === b.dataset.val : ['bold','italic','underline','strikeThrough','insertUnorderedList','insertOrderedList'].includes(b.dataset.cmd) && document.queryCommandState(b.dataset.cmd); } catch(x){} b.classList.toggle('on', on); }); }
+$('#xNotes').addEventListener('keyup', rtState); $('#xNotes').addEventListener('mouseup', rtState);
+$('#xNotes').addEventListener('keydown', e => { if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k'){ e.preventDefault(); document.querySelector('.rtb [data-cmd=link]').click(); } });
+$('#xNotes').addEventListener('paste', e => { e.preventDefault(); const cd = e.clipboardData; const h = cd.getData('text/html'); document.execCommand('insertHTML', false, h ? cleanHTML(h) : textToHTML(cd.getData('text/plain'))); });
+$('#xNotes').addEventListener('click', e => { const a = e.target.closest('a[href]'); if(a && (e.ctrlKey || e.metaKey)){ e.preventDefault(); window.open(a.href, '_blank', 'noopener'); } });
+try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch(x){}
+const formState = () => JSON.stringify([draft && draft.status, cleanHTML($('#xNotes').innerHTML), $('#xStartIn').value, $('#xTarget').value, $('#xActual').value, $('#xBlocker').value.trim(), $('#xOwner').value.trim()]);
 function hintT(){
   const t = T().find(x => x.id === openId); if(!t) return;
   const tv = $('#xTarget').value || t.end, v = wdDiff(t.end, prevWd(tv));
@@ -875,18 +1012,19 @@ $('#xSave').onclick = () => needName(() => {
   const fb = s === 'Done' ? '' : nb;
   if(fb !== (t.blocker || '')){ logChange(t, fb ? `Blocker: ${fb}` : (s === 'Done' ? 'Blocker cleared (done)' : 'Blocker cleared')); if(fb && !t.blocker) t.blockerSince = todayStr(); if(!fb) t.blockerSince = ''; t.blocker = fb; ch = true; }
   if(no && no !== (t.owner || '')){ logChange(t, `Owner → ${no}`); t.owner = no; fillOwners(); ch = true; }
+  const nn = cleanHTML($('#xNotes').innerHTML); if(nn !== (t.notes || '')){ logChange(t, nn ? 'Notes updated' : 'Notes cleared'); t.notes = nn; t.notesBy = who(); ch = true; }
   if(ch){ stamp(t, bv); persist(); }
   closeDrawer(true); render(); toast(ch ? `Saved ${t.id}` : 'No changes');
 });
 
 // ---------- export / import / save ----------
 const COLS = [['ID','id'],['Section','section'],['Artifact ID','artId'],['Artifact','artifact'],['Step','step'],['Owner','owner'],['Status','status'],
-  ['Start','start'],['Planned start','planStart'],['Planned end','end'],['Target date','target'],['Actual done','actual'],['Variance (working days)','_var'],['Blocker','blocker'],['Blocker since','blockerSince'],['Checklist','_ck'],['Note','note']];
+  ['Start','start'],['Planned start','planStart'],['Planned end','end'],['Target date','target'],['Actual done','actual'],['Variance (working days)','_var'],['Blocker','blocker'],['Blocker since','blockerSince'],['Checklist','_ck'],['Step notes','_notes'],['Artifact note','note']];
 function dl(name, text, type){ const b = new Blob([text], {type}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 const fstamp = () => { const d = new Date(); return fd(d).replace(/-/g,'') + '-' + String(d.getHours()).padStart(2,'0') + String(d.getMinutes()).padStart(2,'0'); };
 function doExport(){
   const q = v => { v = S(v); if(/^[=+\-@]/.test(v)) v = ' ' + v; return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-  const lines = [COLS.map(c => c[0]).join(',')].concat(T().map(t => COLS.map(([, k]) => q(k === '_var' ? variance(t) : k === '_ck' ? (ckLive(t).length ? ckLive(t).filter(i => i.done).length + '/' + ckLive(t).length : '') : (k === 'target' ? tgt(t) : t[k]))).join(',')));
+  const lines = [COLS.map(c => c[0]).join(',')].concat(T().map(t => COLS.map(([, k]) => q(k === '_var' ? variance(t) : k === '_notes' ? plainNotes(t.notes) : k === '_ck' ? (ckLive(t).length ? ckLive(t).filter(i => i.done).length + '/' + ckLive(t).length : '') : (k === 'target' ? tgt(t) : t[k]))).join(',')));
   dl(`OBS-PoC-Tracker-data-${fstamp()}.csv`, '﻿' + lines.join('\r\n'), 'text/csv;charset=utf-8'); toast('CSV downloaded. Edit in Excel, save as CSV UTF-8, then Upload data.');
 }
 $('#bExport').onclick = doExport;
@@ -923,6 +1061,7 @@ $('#file').onchange = async e => {
       if(r.actual !== undefined){ const raw = S(r.actual).trim(); if(!raw) t.actual = ''; else { const v = normDate(raw, conv, t.end); if(v) t.actual = prevWd(v); else skipped.push(`${id} actual "${raw}"`); } }
       if(st && st !== 'Done') t.actual = ''; else if(t.actual) t.status = 'Done';
       if(t.status === 'Done' && !t.actual) t.actual = prevWd(todayStr());
+      if(r._notes !== undefined){ const nv = S(r._notes).trim(); if(nv !== plainNotes(t.notes)){ t.notes = nv ? textToHTML(nv) : ''; t.notesBy = who(); } }
       if(r.blocker !== undefined){ const b = S(r.blocker).trim(); if(b && !t.blocker) t.blockerSince = normDate(S(r.blockerSince)) || todayStr(); if(!b) t.blockerSince = ''; t.blocker = t.status === 'Done' ? '' : b; }
       if(t.status === 'Done'){ t.blocker = ''; t.blockerSince = ''; }
       if(Array.isArray(r.log)) t.log = mergeLog(r.log, t.log);
