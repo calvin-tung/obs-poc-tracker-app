@@ -328,6 +328,20 @@ body.rdragging,body.rdragging *{cursor:grabbing!important}
 .pmenu b{display:block;font-size:14px}.pmenu small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
 #bAdd .cv{font-size:10px;margin-left:2px;opacity:.8}
 @media (max-width:760px){.pmenu button{min-height:48px}}
+/* ---------- date range filter ---------- */
+.drw{position:relative}
+.drb{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:7px 10px;min-height:36px;cursor:pointer;color:var(--ink);white-space:nowrap}
+.drb.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.drb .ic{font-size:13px}.drb .x{margin-left:2px;font-size:15px;line-height:1;padding:0 2px;border-radius:4px;opacity:.85}
+@media (hover:hover){.drb .x:hover{background:rgba(255,255,255,.2)}}
+.drp{position:absolute;top:calc(100% + 6px);left:0;z-index:50;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(20,28,36,.16);padding:12px 14px;width:340px;display:none;transform-origin:top left}
+.drp.on{display:block;animation:pop 160ms var(--ease-out)}
+.drp .fld{margin-bottom:6px}.drp .fld label{display:block;font-size:12px;font-weight:bold;color:var(--mut);margin-bottom:4px;text-transform:uppercase;letter-spacing:.03em}
+.drp input[type=date]{width:100%;border:1px solid var(--line);border-radius:6px;padding:8px 9px;min-height:38px}
+.drq{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.drq button{border:1px solid var(--line);background:#fff;border-radius:14px;padding:5px 10px;font-size:12px;cursor:pointer;color:var(--ink)}
+@media (hover:hover){.drq button:hover{border-color:var(--navy)}}
+@media (max-width:760px){.drw{display:none;flex:1 1 100%}.bar.fopen .drw{display:block}.drb{width:100%;min-height:44px}.drp{width:calc(100vw - 28px)}}
 /* ---------- toaster (Sonner-style stack) ---------- */
 #toaster{position:fixed;right:24px;bottom:24px;width:360px;max-width:calc(100vw - 32px);z-index:90;pointer-events:none}
 .tst{position:absolute;right:0;bottom:0;width:100%;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 20px rgba(20,28,36,.12);padding:13px 14px;display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4;pointer-events:auto;touch-action:none;user-select:none;
@@ -382,6 +396,13 @@ body.rdragging,body.rdragging *{cursor:grabbing!important}
   <select id="fOwner" aria-label="Owner"><option value="">All owners</option></select>
   <select id="fStatus" aria-label="Status"><option value="">All statuses</option><option>Not started</option><option>In progress</option><option>Blocked</option><option>Done</option></select>
   <input type="search" id="fText" placeholder="Search ID, artifact, step" aria-label="Search">
+  <div class="drw"><button class="drb" id="fRange" aria-haspopup="dialog" aria-expanded="false" title="Show only tasks active in a date range"><span class="ic">📅</span><span id="fRangeLbl">Any dates</span><span class="x hidden" id="fRangeX" role="button" aria-label="Clear date range" title="Clear date range">×</span></button>
+    <div class="drp" id="rangePop" role="dialog" aria-label="Date range">
+      <div class="drq" id="rangeQuick"><button data-r="today">Today</button><button data-r="tw">This week</button><button data-r="nw">Next week</button><button data-r="n2">Next 2 weeks</button><button data-r="lw">Last week</button><button data-r="poc">Whole PoC</button></div>
+      <div class="row2"><div class="fld"><label for="fFrom">From</label><input type="date" id="fFrom"></div><div class="fld"><label for="fTo">To</label><input type="date" id="fTo"></div></div>
+      <div class="hint" id="rangeHint">Shows tasks that are active at any point in the range.</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn" id="rangeClear">Clear</button><button class="btn pri" id="rangeApply">Apply</button></div>
+    </div></div>
   <button class="clear hidden" id="bClear">Clear filters</button>
   <span class="gap" style="flex:1"></span>
   <div class="daynav" id="dayNav"><button id="dPrev" aria-label="Previous working day">◀</button><b id="dLbl"></b><button id="dNext" aria-label="Next working day">▶</button><button id="dToday">Today</button></div>
@@ -664,10 +685,37 @@ function fillOwners(){
 $('#fOwner').addEventListener('change', e => { store.set(LS + '-owner', e.target.value); render(); });
 $('#fStatus').addEventListener('change', render);
 $('#fText').addEventListener('input', render);
-const filtering = () => !!(sec || $('#fOwner').value || $('#fStatus').value || $('#fText').value.trim());
+let RANGE = (() => { try { const r = JSON.parse(store.get(LS + '-range') || 'null'); return r && r.from && r.to ? r : null; } catch(e){ return null; } })();
+const filtering = () => !!(sec || $('#fOwner').value || $('#fStatus').value || $('#fText').value.trim() || RANGE);
+const monOf = d => { const x = pd(d); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return fd(x); };
+const plusDays = (d, n) => { const x = pd(d); x.setDate(x.getDate() + n); return fd(x); };
+function setRange(r){ RANGE = r && r.from && r.to ? (r.from <= r.to ? r : {from: r.to, to: r.from}) : null; store.set(LS + '-range', JSON.stringify(RANGE)); syncRange(); render(); }
+function syncRange(){
+  const on = !!RANGE; $('#fRange').classList.toggle('on', on); $('#fRangeX').classList.toggle('hidden', !on);
+  $('#fRangeLbl').textContent = on ? (RANGE.from === RANGE.to ? nice(RANGE.from) : `${short(RANGE.from)} – ${short(RANGE.to)}`) : 'Any dates';
+}
+function quickRange(k){ const t = realToday, m = monOf(t);
+  return {today: {from: t, to: t}, tw: {from: m, to: plusDays(m, 4)}, nw: {from: plusDays(m, 7), to: plusDays(m, 11)}, n2: {from: t, to: plusDays(t, 13)},
+    lw: {from: plusDays(m, -7), to: plusDays(m, -3)}, poc: {from: allDates[0], to: allDates[allDates.length - 1]}}[k]; }
+function openRange(){ const p = $('#rangePop'); if(p.classList.contains('on')) return closeRange();
+  $('#fFrom').value = RANGE ? RANGE.from : viewDay; $('#fTo').value = RANGE ? RANGE.to : plusDays(viewDay, 4); rangeHint();
+  p.classList.add('on'); $('#fRange').setAttribute('aria-expanded', 'true'); setTimeout(() => $('#rangeQuick button').focus(), 20); }
+function closeRange(){ $('#rangePop').classList.remove('on'); $('#fRange').setAttribute('aria-expanded', 'false'); }
+function rangeHint(){ const f = $('#fFrom').value, t = $('#fTo').value; if(!f || !t) return;
+  const a = f <= t ? f : t, b = f <= t ? t : f, n = T().filter(x => x.start <= b && barEnd(x) >= a).length;
+  $('#rangeHint').textContent = `${n} task${n === 1 ? '' : 's'} active between ${nice(a)} and ${nice(b)}.`; }
+$('#fRange').addEventListener('click', e => { if(e.target.closest('#fRangeX')){ e.stopPropagation(); setRange(null); toast('Date range cleared', false, 'info'); return; } openRange(); });
+$('#rangeQuick').addEventListener('click', e => { const b = e.target.closest('[data-r]'); if(!b) return; const r = quickRange(b.dataset.r); $('#fFrom').value = r.from; $('#fTo').value = r.to; rangeHint(); setRange(r); closeRange(); });
+['#fFrom', '#fTo'].forEach(x => $(x).addEventListener('input', rangeHint));
+$('#rangeApply').onclick = () => { const f = $('#fFrom').value, t = $('#fTo').value; if(!f || !t) return; setRange({from: f, to: t}); closeRange(); };
+$('#rangeClear').onclick = () => { setRange(null); closeRange(); };
+document.addEventListener('click', e => { if($('#rangePop').classList.contains('on') && !e.target.closest('.drw')) closeRange(); }, true);
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('#rangePop').classList.contains('on')){ e.stopPropagation(); closeRange(); $('#fRange').focus(); } }, true);
+$('#rangePop').addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.matches('input')) $('#rangeApply').click(); });
 $('#bFilt').onclick = () => { const on = document.querySelector('.bar').classList.toggle('fopen'); $('#bFilt').setAttribute('aria-expanded', on); };
-$('#bClear').onclick = () => { sec = ''; syncChips(); $('#fOwner').value = ''; store.set(LS + '-owner', ''); $('#fStatus').value = ''; $('#fText').value = ''; render(); };
+$('#bClear').onclick = () => { sec = ''; syncChips(); $('#fOwner').value = ''; store.set(LS + '-owner', ''); $('#fStatus').value = ''; $('#fText').value = ''; RANGE = null; store.set(LS + '-range', 'null'); syncRange(); render(); };
 function pass(t){
+  if(RANGE && !(t.start <= RANGE.to && barEnd(t) >= RANGE.from)) return false;
   if(sec && t.section !== sec) return false;
   const o = $('#fOwner').value; if(o && !ownersOf(t).includes(o)) return false;
   const s = $('#fStatus').value; if(s && t.status !== s) return false;
@@ -758,11 +806,15 @@ function renderToday(){
 function renderPlan(){
   const all = T().filter(pass);
   const dates = T().flatMap(t => [t.start, tgt(t), t.end, t.actual].filter(Boolean)).filter(x => x >= WIN0 && x <= WIN1).sort();
-  let d0 = pd(dates[0]), d1 = addWd(pd(dates[dates.length - 1]), 8); if(!isWd(d0)) d0 = addWd(d0, 1);
+  let d0 = pd(dates[0]), d1 = addWd(pd(dates[dates.length - 1]), 8);
+  if(RANGE){ d0 = pd(RANGE.from); d1 = pd(RANGE.to); }
+  if(!isWd(d0)) d0 = addWd(d0, 1); if(d1 < d0) d1 = new Date(d0);
   const days = []; for(let x = new Date(d0); x <= d1; x.setDate(x.getDate() + 1)) if(isWd(x)) days.push(fd(x));
-  const narrow = window.innerWidth < 760, CW = narrow ? 32 : 44;
+  const narrow = window.innerWidth < 760; let CW = narrow ? 32 : 44;
   const idx = s => { let i = days.indexOf(s); if(i < 0){ i = days.findIndex(x => x > s); if(i < 0) i = days.length - 1; } return i; };
-  const mid = window.innerWidth < 900, W = days.length * CW, LEFT = narrow ? Math.min(220, Math.round(window.innerWidth * 0.52)) : mid ? 300 : 470;
+  const mid = window.innerWidth < 900, LEFT = narrow ? Math.min(220, Math.round(window.innerWidth * 0.52)) : mid ? 300 : 470;
+  if(RANGE){ const avail = ($('#plan').clientWidth || window.innerWidth) - LEFT - 2; CW = Math.max(CW, Math.min(360, Math.floor(avail / Math.max(1, days.length)))); }   // zoom in on short ranges
+  const W = days.length * CW;
   let h = `<div class="grid" style="grid-template-columns:${LEFT}px ${W}px">`;
   h += `<div class="gh left">${narrow ? 'Artifact / step' : 'Artifact / step · owner · status'}</div><div class="gh" style="justify-content:flex-start;padding:0">` +
     days.map(dd => `<div class="gh${dd===viewDay?' sel':''}${dd===realToday?' now':''}" style="width:${CW}px;position:static;height:40px;flex-direction:column;line-height:1.1">${pd(dd).getDate()}<small>${DOW[pd(dd).getDay()].slice(0,2)}</small></div>`).join('') + '</div>';
@@ -1522,7 +1574,7 @@ $('#plan').addEventListener('keydown', e => {
 });
 
 document.body.classList.add('intro'); setTimeout(() => document.body.classList.remove('intro'), 900);
-sortTasks();
+sortTasks(); syncRange();
 fillOwners(); renderMeta(); render();
 store.get(LS); // probe
 if(!storageOK) showBanner('nostore', 'Autosave is off in this browser. Click Save tracker before you close the page, or your edits are lost.');
