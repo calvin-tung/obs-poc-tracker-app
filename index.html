@@ -420,11 +420,11 @@ body:has(.drawer.on) #toaster{right:464px;transition:right 300ms var(--ease-draw
 <main>
   <section id="vToday">
     <div class="kpis" id="kpis"></div>
-    <div class="ptabs" id="ptabs"><button data-p="pDue" class="on">Due <span id="tDue"></span></button><button data-p="pOver">Overdue <span id="tOver"></span></button><button data-p="pDone">Completed <span id="tDone"></span></button></div>
+    <div class="ptabs" id="ptabs"><button data-p="pDue" class="on">Active <span id="tDue"></span></button><button data-p="pOver">Overdue <span id="tOver"></span></button><button data-p="pDone">Completed <span id="tDone"></span></button></div>
     <div class="cols">
-      <div class="panel on" id="pDue"><h3>Due on this day <span class="c" id="cDue"></span></h3><div class="list" id="lDue"></div></div>
+      <div class="panel on" id="pDue"><h3><span id="hDue">Due on this day</span> <span class="c" id="cDue"></span></h3><div class="list" id="lDue"></div></div>
       <div class="panel red" id="pOver"><h3>Overdue or blocked <span class="c" id="cOver"></span></h3><div class="list" id="lOver"></div></div>
-      <div class="panel" id="pDone"><h3>Completed <span class="c" id="cDone"></span></h3><div class="list" id="lDone"></div></div>
+      <div class="panel" id="pDone"><h3><span id="hDone">Completed</span> <span class="c" id="cDone"></span></h3><div class="list" id="lDone"></div></div>
     </div>
   </section>
   <section id="vPlan" class="hidden">
@@ -731,8 +731,8 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('#rangePo
 $('#rangePop').addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.matches('input')) $('#rangeApply').click(); });
 $('#bFilt').onclick = () => { const on = document.querySelector('.bar').classList.toggle('fopen'); $('#bFilt').setAttribute('aria-expanded', on); };
 $('#bClear').onclick = () => { sec = ''; syncChips(); $('#fOwner').value = ''; store.set(LS + '-owner', ''); $('#fStatus').value = ''; $('#fText').value = ''; RANGE = null; store.set(LS + '-range', 'null'); syncRange(); render(); };
-function pass(t){
-  if(RANGE && !(t.start <= RANGE.to && barEnd(t) >= RANGE.from)) return false;
+function pass(t, noRange){
+  if(RANGE && !noRange && !(t.start <= RANGE.to && barEnd(t) >= RANGE.from)) return false;
   if(sec && t.section !== sec) return false;
   const o = $('#fOwner').value; if(o && !ownersOf(t).includes(o)) return false;
   const s = $('#fStatus').value; if(s && t.status !== s) return false;
@@ -793,27 +793,37 @@ function grouped(list, extraFn){
 }
 const bySec = arr => arr.sort((a, b) => (sections.indexOf(a.section) - sections.indexOf(b.section)) || (a.status === 'Done') - (b.status === 'Done'));
 function renderToday(){
-  const all = T().filter(pass), d = viewDay;
-  const dueOpen = all.filter(t => t.status !== 'Done' && tgt(t) === d);
-  const over = all.filter(t => t.status !== 'Done' && (tgt(t) < d || t.status === 'Blocked') && !dueOpen.includes(t));
-  const doneAll = all.filter(t => t.status === 'Done' && (t.actual || tgt(t)) <= d);
+  // With a date range set, the Today tab answers "what is due / done in that range"; overdue stays relative to the selected day.
+  const R = RANGE, base = T().filter(t => pass(t, true)), all = R ? base : T().filter(t => pass(t)), d = viewDay;
+  const inR = x => R && x >= R.from && x <= R.to, rl = R ? (R.from === R.to ? short(R.from) : `${short(R.from)} – ${short(R.to)}`) : '';
+  // Column 1 = active: open, already started (or overlapping the range), not yet past target, not blocked; grouped by section, soonest deadline first
+  const secI = t => sections.indexOf(t.section);
+  const dueOpen = (R ? base.filter(t => t.status !== 'Done' && t.status !== 'Blocked' && t.start <= R.to && tgt(t) >= R.from)
+                     : all.filter(t => t.status !== 'Done' && t.status !== 'Blocked' && t.start <= d && tgt(t) >= d))
+    .sort((a, b) => secI(a) - secI(b) || tgt(a).localeCompare(tgt(b)) || a.start.localeCompare(b.start));
+  const dueToday = dueOpen.filter(t => tgt(t) === d).length;
+  const over = base.filter(t => t.status !== 'Done' && (tgt(t) < d || t.status === 'Blocked') && !dueOpen.includes(t) && (R || pass(t)));
+  const doneAll = R ? base.filter(t => t.status === 'Done' && inR(t.actual || tgt(t))) : all.filter(t => t.status === 'Done' && (t.actual || tgt(t)) <= d);
+  $('#hDue').textContent = R ? 'Active ' + rl : 'Active on this day'; $('#hDone').textContent = R ? 'Completed ' + rl : 'Completed';
   over.sort((a, b) => tgt(a).localeCompare(tgt(b)));
   doneAll.sort((a, b) => (b.actual || tgt(b)).localeCompare(a.actual || tgt(a)) || (sections.indexOf(a.section) - sections.indexOf(b.section)));
   const doneOn = doneAll.filter(t => (t.actual || tgt(t)) === d).length;
-  $('#lDue').innerHTML = grouped(bySec(dueOpen)); $('#cDue').textContent = dueOpen.length;
+  const left = t => { const n = wdDiff(d, tgt(t)); return `<div class="${n <= 0 ? 'od' : ''}">${n < 0 ? -n + 'd overdue' : n === 0 ? 'Due today' : n === 1 ? 'Due tomorrow' : 'Due in ' + n + ' days'}</div>`; };
+  $('#lDue').innerHTML = !dueOpen.length ? `<div class="empty">No started tasks are open ${R ? 'between ' + nice(R.from) + ' and ' + nice(R.to) : 'on ' + nice(d)}${(sec || $('#fOwner').value || $('#fStatus').value || $('#fText').value.trim()) ? ' for the other filters. <button class="clear" data-clear>Clear filters</button>' : '.'}</div>` : grouped(dueOpen, left);
+  $('#cDue').textContent = dueToday ? `${dueOpen.length} · ${dueToday} due ${R ? 'today' : short(d)}` : dueOpen.length;
   $('#lOver').innerHTML = grouped(bySec(over), t => { const od = tgt(t) < d ? wdDiff(tgt(t), d) : 0; return `<div class="od">${t.status === 'Blocked' ? 'Blocked' : ''}${t.status === 'Blocked' && od ? ' · ' : ''}${od ? od + 'd overdue' : ''}</div>`; });
   $('#cOver').textContent = over.length;
   $('#lDone').innerHTML = doneAll.length ? doneAll.map(t => taskRow(t)).join('') : emptyMsg();
-  $('#cDone').textContent = doneOn ? `${doneAll.length} · ${doneOn} on ${short(d)}` : doneAll.length;
+  $('#cDone').textContent = !R && doneOn ? `${doneAll.length} · ${doneOn} on ${short(d)}` : doneAll.length;
   $('#tDue').textContent = dueOpen.length; $('#tOver').textContent = over.length; $('#tDone').textContent = doneAll.length;
   const done = all.filter(t => t.status === 'Done').length, pct = all.length ? Math.round(done / all.length * 100) : 0;
   const planBy = all.filter(t => t.end <= d).length;
   const overdueN = all.filter(t => t.status !== 'Done' && tgt(t) < d).length;
   const k = [
-    ['Due ' + short(d), dueOpen.length, '', 'pDue', 'still open'],
+    [R ? 'Active ' + rl : 'Active', dueOpen.length, '', 'pDue', dueToday ? `${dueToday} due ${short(d)}` : 'started, not done'],
     ['Overdue', overdueN, 'alert', 'pOver', 'past target, not done'],
     ['Blocked', all.filter(t => t.status === 'Blocked').length, 'alert', 'pOver', 'need help to move'],
-    ['Completed', doneAll.length, '', 'pDone', doneOn ? doneOn + ' on ' + short(d) : 'to date'],
+    [R ? 'Completed ' + rl : 'Completed', doneAll.length, '', 'pDone', R ? 'done in range' : doneOn ? doneOn + ' on ' + short(d) : 'to date'],
   ];
   $('#kpis').innerHTML = k.map(([l, n, c, tg, sub]) => `<button class="kpi ${n && c ? c : ''}${tg === panelSel ? ' sel' : ''}" data-go="${tg}"><div class="n">${n}</div><div class="l"><b>${l}</b> · ${sub}</div></button>`).join('') +
     `<div class="kpi prog"><div class="n">${pct}%</div><div class="l">${done} of ${all.length} steps done · plan expects ${planBy} by ${short(d)}</div><div class="pbar"><i style="width:${pct}%"></i></div></div>`;
@@ -821,7 +831,7 @@ function renderToday(){
 }
 // ---------- plan ----------
 function renderPlan(){
-  const all = T().filter(pass);
+  const all = T().filter(t => pass(t));
   const dates = T().flatMap(t => [t.start, tgt(t), t.end, t.actual].filter(Boolean)).filter(x => x >= WIN0 && x <= WIN1).sort();
   let d0 = pd(dates[0]), d1 = addWd(pd(dates[dates.length - 1]), 8);
   if(RANGE){ d0 = pd(RANGE.from); d1 = pd(RANGE.to); }
