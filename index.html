@@ -1051,9 +1051,9 @@ body.ghm-admin .menu [data-gh=admin]{display:block}
     <div class="card">
       <h3>GitHub access key</h3>
       <div class="kv" id="admKeyInfo"></div>
-      <input type="password" id="admKey" placeholder="Paste a new key (github_pat_…)" style="margin-top:10px">
-      <div class="kv" style="margin-top:8px">The key needs Contents read and write on both tracker repos. It is stored encrypted, so only people with a password can use it.</div>
-      <div class="acts"><button class="btn pri" id="admKeyGo">Test and save key</button></div>
+      <div class="row" style="margin-top:10px"><input type="password" id="admKey" placeholder="New key (github_pat_…), or leave blank"><input type="text" id="admExp" placeholder="Key expiry date, e.g. 2027-02-25"></div>
+      <div class="kv" style="margin-top:8px">GitHub shows the expiry date when you create the key. Enter it here so the tracker can warn you 14 days before. The key needs Contents read and write on both tracker repos. It is stored encrypted, so only people with a password can use it.</div>
+      <div class="acts"><button class="btn pri" id="admKeyGo">Test and save</button></div>
       <div class="msg" id="admKeyMsg"></div>
     </div>
   </section>
@@ -1342,13 +1342,13 @@ async function reencrypt(path, aad, newDK, tok){
   }
   throw err('Http', 'The data kept changing. Try again in a minute.');
 }
-async function saveConfig({teamPw, adminPw, token}){
+async function saveConfig({teamPw, adminPw, token, tokenExp}){
   const tok = token || SEC.token, appTok = token || SEC.appToken || SEC.token;
   const cr = await readFile(M.appOwner, M.appRepo, 'config.json', null, appTok);
   if(cr.status !== 200) throw err('Http', 'Cannot read the tracker settings in the app repo.');
   const cfg = JSON.parse(cr.text), iter = cfg.iter || ITER, rotate = !!teamPw;
   const newDK = rotate ? rnd(32) : DK;
-  const base = {v: 1, dk: b64(newDK), dkPrev: rotate ? b64(DK) : (SEC.dkPrev || null), token: tok, data: SEC.data, epoch: (SEC.epoch || 0) + (rotate ? 1 : 0)};
+  const base = {v: 1, dk: b64(newDK), dkPrev: rotate ? b64(DK) : (SEC.dkPrev || null), token: tok, tokenExp: tokenExp !== undefined ? tokenExp : (token ? '' : (SEC.tokenExp || '')), data: SEC.data, epoch: (SEC.epoch || 0) + (rotate ? 1 : 0)};
   let tSalt, tKek; if(teamPw){ tSalt = rnd(16); tKek = await kekFrom(teamPw, tSalt, iter); } else { tSalt = ub64(SEC.teamSalt); tKek = ub64(SEC.teamKek); }
   let aSalt = ub64(cfg.admin.salt), aKek = KEK; if(adminPw){ aSalt = rnd(16); aKek = await kekFrom(adminPw, aSalt, iter); }
   const adm = Object.assign({}, base, {role: 'admin', appToken: appTok, teamPw: teamPw || SEC.teamPw || '', teamKek: b64(tKek), teamSalt: b64(tSalt)});
@@ -1381,25 +1381,28 @@ $g('#admAdmGo').onclick = async () => {
   catch(e){ msg('#admAdmMsg', e.message); }
   $g('#admAdmGo').disabled = false;
 };
+const expDate = () => { const v = SEC.tokenExp || TOKEN_EXP; if(!v) return null; const d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(v) ? v + 'T23:59:00' : v.replace(' UTC', 'Z').replace(' ', 'T')); return isNaN(d) ? null : d; };
 function keyInfo(){
-  const d = TOKEN_EXP ? new Date(TOKEN_EXP.replace(' UTC', 'Z').replace(' ', 'T')) : null;
+  const d = expDate(); $g('#admExp').value = SEC.tokenExp ? String(SEC.tokenExp).slice(0, 10) : '';
   const days = d && !isNaN(d) ? Math.round((d - Date.now()) / 864e5) : null;
   $g('#admKeyInfo').innerHTML = `Data repo: <code>${escg(SEC.data.owner + '/' + SEC.data.repo)}</code> · App repo: <code>${escg(M.appOwner + '/' + M.appRepo)}</code><br>` +
-    (days == null ? 'Expiry: unknown' : `Current key expires <b>${d.toLocaleDateString([], {day: 'numeric', month: 'short', year: 'numeric'})}</b> (${days} day${days === 1 ? '' : 's'}).`);
+    (days == null ? 'Expiry: not recorded. Enter the date below.' : `Current key expires <b>${d.toLocaleDateString([], {day: 'numeric', month: 'short', year: 'numeric'})}</b> (${days} day${days === 1 ? '' : 's'}).`);
 }
 function keyWarn(){
-  const d = TOKEN_EXP ? new Date(TOKEN_EXP.replace(' UTC', 'Z').replace(' ', 'T')) : null; if(!d || isNaN(d)) return;
+  const d = expDate(); if(!d) return;
   const days = Math.round((d - Date.now()) / 864e5);
   if(days <= 14){ const b = $g('#banner'); $g('#bannerTxt').textContent = `Admin: the GitHub key expires in ${days} day${days === 1 ? '' : 's'}. Create a new key and paste it under Admin → GitHub key, or the tracker stops saving.`; b.classList.add('show', 'warn'); $g('#bannerBtns').innerHTML = ''; }
 }
 $g('#admKeyGo').onclick = async () => {
-  const k = $g('#admKey').value.trim(); if(!/^(github_pat_|ghp_)/.test(k)) return msg('#admKeyMsg', 'That does not look like a GitHub key.');
-  msg('#admKeyMsg', 'Testing…', true); $g('#admKeyGo').disabled = true;
+  const k = $g('#admKey').value.trim(), x = $g('#admExp').value.trim();
+  if(k && !/^(github_pat_|ghp_)/.test(k)) return msg('#admKeyMsg', 'That does not look like a GitHub key.');
+  if(x && !/^\d{4}-\d{2}-\d{2}$/.test(x)) return msg('#admKeyMsg', 'Enter the expiry date as YYYY-MM-DD.');
+  if(!k && !x) return msg('#admKeyMsg', 'Paste a new key, enter the expiry date, or both.');
+  msg('#admKeyMsg', k ? 'Testing…' : 'Saving…', true); $g('#admKeyGo').disabled = true;
   try {
-    const D = SEC.data, t = await readFile(D.owner, D.repo, D.path, null, k);
-    if(t.status !== 200) throw err('Auth', 'The new key cannot read the data repo.');
-    await saveConfig({token: k}); $g('#admKey').value = ''; keyInfo();
-    msg('#admKeyMsg', 'Key saved. Everyone uses it from their next sync.', true); logAccess('Replaced GitHub key');
+    if(k){ const D = SEC.data, t = await readFile(D.owner, D.repo, D.path, null, k); if(t.status !== 200) throw err('Auth', 'The new key cannot read the data repo.'); }
+    await saveConfig({token: k || undefined, tokenExp: x || (k ? '' : SEC.tokenExp)}); $g('#admKey').value = ''; keyInfo();
+    msg('#admKeyMsg', k ? 'Key saved. Everyone uses it from their next sync.' : 'Expiry date saved.', true); if(k) logAccess('Replaced GitHub key');
   } catch(e){ msg('#admKeyMsg', e.message); }
   $g('#admKeyGo').disabled = false;
 };
